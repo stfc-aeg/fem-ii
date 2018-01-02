@@ -53,30 +53,6 @@ std::string receive(){
 
 }
 
-/* OLD CODE
-std::string encode_msg(Fem2ControlMsg the_msg){
-
-    std::stringstream ss;
-    msgpack::pack(&ss, the_msg);
-    return ss.str();
-}
-
-Fem2ControlMsg decode_msg(std::string the_msg){
-
-    msgpack::unpacked unp;
-    msgpack::unpack(unp, the_msg.data(), the_msg.size());
-    msgpack::object obj = unp.get();
-
-    std::cout << "---decoded---" << std::endl;
-    std::cout << obj << std::endl;
-    std::cout << "---decoded---" << std::endl;
-
-    Fem2ControlMsg decoded = obj.as<Fem2ControlMsg>();
-
-    return decoded;
-}
-
-*/
 
 int main(){
 
@@ -100,16 +76,6 @@ int main(){
 
     // send the encoded reply via zmq.
     send(encoded_reply);
-   
-   /* old code
-
-    //decode 
-    Fem2ControlMsg decoded_request = decode_msg(encoded_request);
-
-    // send same decoded reply back for comparison
-    send(encode_msg(decoded_request));
-    */
-
 
 }
 

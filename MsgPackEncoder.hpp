@@ -3,10 +3,11 @@
 
 #include "MsgEncoder.hpp"
 
-//JSON
-
 using namespace Femii;
 
+/*
+Sub-class of MsgEncoder, specialising for MessagePack Encoding/Decoding
+*/
 class MsgPackEncoder : MsgEncoder{
 
 public:

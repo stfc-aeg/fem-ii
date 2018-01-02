@@ -2,8 +2,10 @@
 
 using namespace Femii;
 
+//  Default constructor
 MsgPackEncoder::MsgPackEncoder(){};
-  
+
+// Encodes a Fem2ControlMsg into a MessagePack Bytes, returned as a string
 const std::string MsgPackEncoder::encode(Fem2ControlMsg the_msg){
 
     std::stringstream ss;
@@ -11,6 +13,7 @@ const std::string MsgPackEncoder::encode(Fem2ControlMsg the_msg){
     return ss.str();
 }
 
+// Decodes a MessagePack Byte String into a Fem2ControlMsg, returning the object
 const Fem2ControlMsg MsgPackEncoder::decode(std::string the_msg){
 
     msgpack::unpacked unp;

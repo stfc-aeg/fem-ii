@@ -8,10 +8,14 @@
 #include <string>
 #include <sstream>
 #include <msgpack.hpp>
-//JSON
+//TODO - include JSON
 
 using namespace Femii;
 
+/*
+Abstract base class for a message encoder
+Encodes and decodes Fem2ControlMsg's
+*/
 class MsgEncoder{
 
 public:
@@ -24,7 +28,9 @@ public:
 
 };
 
-/*
+/* 
+
+TO DO
 print as python bytes??
 print encoded message??
 compare encoded messages??

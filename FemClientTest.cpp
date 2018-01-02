@@ -53,29 +53,6 @@ std::string receive(){
 
 }
 
-/* OLD CODE
-const std::string encode_msg(Fem2ControlMsg the_msg){
-
-    std::stringstream ss;
-    msgpack::pack(&ss, the_msg);
-    return ss.str();
-}
-
-Fem2ControlMsg decode_msg(std::string the_msg){
-
-    msgpack::unpacked unp;
-    msgpack::unpack(unp, the_msg.data(), the_msg.size());
-    msgpack::object obj = unp.get();
-
-    std::cout << "---decoded---" << std::endl;
-    std::cout << obj << std::endl;
-    std::cout << "---decoded---" << std::endl;
-
-    Fem2ControlMsg decoded = obj.as<Fem2ControlMsg>();
-
-    return decoded;
-}
-*/
 
 
 int main(){
@@ -116,39 +93,6 @@ int main(){
     
     std::cout << "MATCH" << std::endl;
 
-
-
-
-
-
-
-
-
-    /*OLD CODE
-
-    //send the message
-    send(encode_msg(request));
-
-    //receive request
-    std::string encoded_reply = receive();
-
-    // decode the response
-    Fem2ControlMsg reply = decode_msg(encoded_reply);
-  
-    //print
-    print_as_python_bytes(encoded_reply);
-
-    //assert they are the same thing
-    assert(request.get_access_type() == reply.get_access_type());
-    assert(request.get_ack_state() == reply.get_ack_state());
-    assert(request.get_cmd_type() == reply.get_cmd_type());
-    assert(request.get_req_id() == reply.get_req_id());
-    assert(request.get_posix_timestamp() == reply.get_posix_timestamp());
-    assert(request.get_retries() == reply.get_retries());
-    assert(request.get_timeout() == reply.get_timeout());
-    
-    std::cout << "Assertions worked" << std::endl;
-    */
 
 }
 
