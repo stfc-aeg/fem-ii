@@ -114,7 +114,7 @@ public:
 
     };
 
-    //  Supported data widths, default = WIDTH_UNSUPPORTED (-1)
+    //  Supported data widths, default = WIDTH_UNSUPPORTED (-1) -- is this payload?
     enum DataWidth{
 
         WIDTH_UNSUPPORTED = -1, 

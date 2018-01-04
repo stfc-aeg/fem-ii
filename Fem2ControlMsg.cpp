@@ -72,9 +72,7 @@ const int16_t Fem2ControlMsg::get_retries(void) const
 //  Returns the a iso string representation of the posix timestamp for the Fem2ControlMsg
 const std::string Fem2ControlMsg::get_string_timestamp(void) const
 {
-    
-    return this->header.string_timestamp_;
-    
+    return this->header.string_timestamp_;  
 };
 
 //  Returns the posix timestamp representation of the string timestamp for the Fem2ControlMsg
@@ -148,7 +146,7 @@ void Fem2ControlMsg::init_maps(){
     this->ack_state_map_.insert(AckStateMapEntry("nack", Fem2ControlMsg::NACK));
     this->ack_state_map_.insert(AckStateMapEntry("ack undefined", Fem2ControlMsg::ACK_UNDEFINED));
 
-    //   to do
+    //   to do - add data width to header or payload - Design Decision
     this->data_width_map_.insert(DataWidthMapEntry("byte", Fem2ControlMsg::WIDTH_BYTE));
     this->data_width_map_.insert(DataWidthMapEntry("word", Fem2ControlMsg::WIDTH_WORD));
     this->data_width_map_.insert(DataWidthMapEntry("long", Fem2ControlMsg::WIDTH_LONG));
@@ -156,6 +154,7 @@ void Fem2ControlMsg::init_maps(){
 
 }
 
+//  TODO Validation/ Exceptions?
 std::string Fem2ControlMsg::print(){
 
     init_maps();    // move init?
@@ -165,7 +164,7 @@ std::string Fem2ControlMsg::print(){
     std::string access_string = "undefined";
     std::string ack_string = "undefined";
 
-    //this function should return the string representation of the command type.
+    //  returns the string representations of Fem2ENUMS
     if (cmd_type_map_.right.count(get_cmd_type()))
     {
         command_string = cmd_type_map_.right.at(get_cmd_type());
@@ -194,7 +193,7 @@ std::string Fem2ControlMsg::print(){
     output += "    Retries : " + std::to_string(get_retries()) + ",\n";
     output += "    Request ID: " + std::to_string(get_req_id()) + ",\n";
     output += "    Timestamp : " + get_string_timestamp() + ",\n}\n";
-    output += "PAYLOAD : {\n}";
+    output += "PAYLOAD : {\n}\n";
 
     return output;
 }
