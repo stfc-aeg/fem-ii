@@ -1,7 +1,6 @@
 #ifndef FEM2CONTROLMSG_H_
 #define FEM2CONTROLMSG_H_
 
-
 #include <exception>
 #include <vector>
 #include <iostream>
@@ -9,6 +8,7 @@
 #include <sstream>
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include <msgpack.hpp>
+#include "boost/bimap.hpp"
 
 
 #ifndef _WIN32
@@ -164,6 +164,26 @@ public:
 
     //  TODO Setter methods for the payload
 
+    //! Internal bi-directional mapping of command type from string to enumerated CommandType
+    typedef boost::bimap<std::string, CommandType> CommandTypeMap;
+    typedef CommandTypeMap::value_type CommandTypeMapEntry;
+
+    //! Internal bi-directional mapping of Access type from string to enumerated AccessType
+    typedef boost::bimap<std::string, AccessType> AccessTypeMap;
+    typedef AccessTypeMap::value_type AccessTypeMapEntry;
+
+    //! Internal bi-directional mapping of Ack state from string to enumerated AckState
+    typedef boost::bimap<std::string, AckState> AckStateMap;
+    typedef AckStateMap::value_type AckStateMapEntry;
+
+    //! Internal bi-directional mapping of Data width from string to enumerated DataWidth
+    typedef boost::bimap<std::string, DataWidth> DataWidthMap;
+    typedef DataWidthMap::value_type DataWidthMapEntry;
+
+
+    void init_maps();
+
+    std::string print();
     //  Overloaded outstream operator
     friend std::ostream& operator <<(std::ostream& os, Fem2ControlMsg& control_message);
 
@@ -196,6 +216,10 @@ private:
     };
 
     Header header;
+    static CommandTypeMap cmd_type_map_;          //!< Bi-directional command type map
+    static AccessTypeMap access_type_map_;        //!< Bi-directional access type map
+    static DataWidthMap data_width_map_;          //!< Bi-directional data width map
+    static AckStateMap ack_state_map_;            //!< Bi-directional ack state map            
     
 };  
 

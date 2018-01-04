@@ -3,17 +3,19 @@
 #include "Fem2ControlMsg.hpp"
 #include <cassert>
 #include "MsgPackEncoder.hpp"
+/*
+Mock Fem Client - uses ZMQ and MsgPack encoding to send and receive a single
+Fem2ControlMsg in a req-reply synchronous loop.
 
+Generates a Fem2ControlMsg, sends the encoded Fem2ControlMsg and receives..
+"the identical" encoded Fem2ControlMsg response. 
+Asserts that the message is returned in tact and functional.
+*/
 using namespace Femii;
 
+//  create a zmq context and request socket
 zmq::context_t context(1);
 zmq::socket_t socket_(context, ZMQ_REQ);
-
-/*  
-//
-//  Helper methods for testing purposes.
-//
-*/
 
 //  prints the encoded content (buf) as python bytes
 void print_as_python_bytes(std::string const& buf)
@@ -31,7 +33,7 @@ void print_as_python_bytes(std::string const& buf)
     std::cout << std::dec << "\'" << std::endl;
 }
 
-//  checker method to check sending of encoded messages is OK for a socket to send.
+// sends an encoded (string) message over zmq
 void send(const std::string& message_str)
 {
   size_t msg_size = message_str.size();
@@ -40,7 +42,7 @@ void send(const std::string& message_str)
   socket_.send(msg);
 }
 
-// checker method to see how a zmq socket would receive the messages.
+// receives a request over zmq, returns the string reply
 std::string receive(){
 
     zmq::message_t request;
@@ -50,19 +52,19 @@ std::string receive(){
     std::string request_string(static_cast<char*>(request.data()), size);
 
     return request_string;
-
 }
 
-
-
 int main(){
-
 
     socket_.connect("tcp://localhost:5555");
     printf("Client Booted \n");
 
     //initialise a control msg with values.
     Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+
+    //Fem2ControlMsg request; //default message
+    std::cout << request.get_posix_timestamp() << std::endl;
+    std::cout << request.get_string_timestamp() << std::endl;
 
     //  create a msgpack encoder
     MsgPackEncoder encoder;    
@@ -82,18 +84,12 @@ int main(){
     // decode the response using the encoder
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
   
-    //assert they are the same thing
-    assert(request.get_access_type() == reply.get_access_type());
-    assert(request.get_ack_state() == reply.get_ack_state());
-    assert(request.get_cmd_type() == reply.get_cmd_type());
-    assert(request.get_req_id() == reply.get_req_id());
-    assert(request.get_posix_timestamp() == reply.get_posix_timestamp());
-    assert(request.get_retries() == reply.get_retries());
-    assert(request.get_timeout() == reply.get_timeout());
-    
+    //assert encoded/decoded round trip msgs are the same thing
+    assert(request == reply);
     std::cout << "MATCH" << std::endl;
 
-
+    //print the fem2controlmsg as a string.
+    std::cout << reply;
 }
 
 

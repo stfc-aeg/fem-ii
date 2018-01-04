@@ -72,7 +72,9 @@ const int16_t Fem2ControlMsg::get_retries(void) const
 //  Returns the a iso string representation of the posix timestamp for the Fem2ControlMsg
 const std::string Fem2ControlMsg::get_string_timestamp(void) const
 {
-    return boost::posix_time::to_iso_extended_string(this->header.internal_timestamp_);
+    
+    return this->header.string_timestamp_;
+    
 };
 
 //  Returns the posix timestamp representation of the string timestamp for the Fem2ControlMsg
@@ -123,17 +125,117 @@ void Fem2ControlMsg::set_timeout(int16_t timeout){
     this->header.timeout_ = timeout;
 };
 
+void Fem2ControlMsg::init_maps(){
+
+    this->cmd_type_map_.insert(CommandTypeMapEntry("read", CMD_READ));
+    this->cmd_type_map_.insert(CommandTypeMapEntry("write", Fem2ControlMsg::CMD_WRITE));
+    this->cmd_type_map_.insert(CommandTypeMapEntry("config", Fem2ControlMsg::CMD_CONFIGURE));
+    this->cmd_type_map_.insert(CommandTypeMapEntry("notify", Fem2ControlMsg::CMD_NOTIFY));
+    this->cmd_type_map_.insert(CommandTypeMapEntry("alert", Fem2ControlMsg::CMD_ALERT));
+    this->cmd_type_map_.insert(CommandTypeMapEntry("plugin", Fem2ControlMsg::CMD_PLUGIN));
+    this->cmd_type_map_.insert(CommandTypeMapEntry("unsupported command", Fem2ControlMsg::CMD_UNSUPPORTED));
+
+    this->access_type_map_.insert(AccessTypeMapEntry("i2c", Fem2ControlMsg::ACCESS_I2C));
+    this->access_type_map_.insert(AccessTypeMapEntry("xadc", Fem2ControlMsg::ACCESS_XADC));
+    this->access_type_map_.insert(AccessTypeMapEntry("gpio", Fem2ControlMsg::ACCESS_GPIO));
+    this->access_type_map_.insert(AccessTypeMapEntry("rawreg", Fem2ControlMsg::ACCESS_RAWREG));
+    this->access_type_map_.insert(AccessTypeMapEntry("ddr", Fem2ControlMsg::ACCESS_DDR));
+    this->access_type_map_.insert(AccessTypeMapEntry("qdr", Fem2ControlMsg::ACCESS_QDR));
+    this->access_type_map_.insert(AccessTypeMapEntry("qspi", Fem2ControlMsg::ACCESS_QSPI));
+    this->access_type_map_.insert(AccessTypeMapEntry("unsupported acccess", Fem2ControlMsg::ACCESS_UNSUPPORTED));
+    
+    this->ack_state_map_.insert(AckStateMapEntry("ack", Fem2ControlMsg::ACK));
+    this->ack_state_map_.insert(AckStateMapEntry("nack", Fem2ControlMsg::NACK));
+    this->ack_state_map_.insert(AckStateMapEntry("ack undefined", Fem2ControlMsg::ACK_UNDEFINED));
+
+    //   to do
+    this->data_width_map_.insert(DataWidthMapEntry("byte", Fem2ControlMsg::WIDTH_BYTE));
+    this->data_width_map_.insert(DataWidthMapEntry("word", Fem2ControlMsg::WIDTH_WORD));
+    this->data_width_map_.insert(DataWidthMapEntry("long", Fem2ControlMsg::WIDTH_LONG));
+    this->data_width_map_.insert(DataWidthMapEntry("unsupported width", Fem2ControlMsg::WIDTH_UNSUPPORTED));
+
+}
+
+std::string Fem2ControlMsg::print(){
+
+    init_maps();    // move init?
+
+    //  replace this with illegals?
+    std::string command_string = "undefined";
+    std::string access_string = "undefined";
+    std::string ack_string = "undefined";
+
+    //this function should return the string representation of the command type.
+    if (cmd_type_map_.right.count(get_cmd_type()))
+    {
+        command_string = cmd_type_map_.right.at(get_cmd_type());
+    }
+    if (access_type_map_.right.count(get_access_type()))
+    {
+        access_string = access_type_map_.right.at(get_access_type());
+    }
+    /* TODO
+    if (data_width_map_.right.count(get_data_width()))
+    {
+        data_width = data_width_map_.right.at(get_data_width());
+    }
+    */
+    if (ack_state_map_.right.count(get_ack_state()))
+    {
+        ack_string = ack_state_map_.right.at(get_ack_state());
+    }
+
+    std::string output = "";
+    output += "HEADER : {\n";
+    output += "    Command : " + command_string + ",\n";
+    output += "    Access : " + access_string + ",\n";
+    output += "    Ack State: " + ack_string + ",\n";
+    output += "    Timeout : " + std::to_string(get_timeout()) + ",\n"; 
+    output += "    Retries : " + std::to_string(get_retries()) + ",\n";
+    output += "    Request ID: " + std::to_string(get_req_id()) + ",\n";
+    output += "    Timestamp : " + get_string_timestamp() + ",\n}\n";
+    output += "PAYLOAD : {\n}";
+
+    return output;
+}
+
 //! Overloaded equality relational operator
 bool operator ==(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg){
+
+    bool equal = true;
+
+    equal += (lefthand_msg.get_access_type() == righthand_msg.get_access_type());
+    equal += (lefthand_msg.get_ack_state() == righthand_msg.get_ack_state());
+    equal += (lefthand_msg.get_cmd_type() == righthand_msg.get_cmd_type());
+    equal += (lefthand_msg.get_req_id() == righthand_msg.get_req_id());
+    equal += (lefthand_msg.get_posix_timestamp() == righthand_msg.get_posix_timestamp());
+    equal += (lefthand_msg.get_string_timestamp() == righthand_msg.get_string_timestamp());
+    equal += (lefthand_msg.get_retries() == righthand_msg.get_retries());
+    equal += (lefthand_msg.get_timeout() == righthand_msg.get_timeout());
+
+    //TODO - Payload equality 
+    return equal;
 
 };
 
 //! Overloaded inequality relational operator
 bool operator !=(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg){
 
+    return !(lefthand_msg == righthand_msg);
 };
+
+std::ostream& operator <<(std::ostream& os, Fem2ControlMsg& control_message){
+
+    os << control_message.print();
+    return os;
+
+}
 
 //  TODO - Boost::variant PAYLOAD features
 
-
+// Definition of static member variables used for type and value mapping
+Fem2ControlMsg::CommandTypeMap Fem2ControlMsg::cmd_type_map_;
+Fem2ControlMsg::AccessTypeMap Fem2ControlMsg::access_type_map_;
+Fem2ControlMsg::DataWidthMap Fem2ControlMsg::data_width_map_;
+Fem2ControlMsg::AckStateMap Fem2ControlMsg::ack_state_map_;
 }; //   Fem2ControlMsg

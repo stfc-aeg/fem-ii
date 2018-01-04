@@ -3,17 +3,17 @@
 #include "Fem2ControlMsg.hpp"
 #include <cassert>
 #include "MsgPackEncoder.hpp"
-
+/*
+Mock Fem Server - uses ZMQ and MsgPack encoding to receive and send a single
+Fem2ControlMsg in a req-reply synchronous loop.
+Receives an encoded Fem2ControlMsg, decodes and creates a new Fem2ControlMsg
+from the content. Sends the same message back. 
+*/
 using namespace Femii;
 
+//  create a zmq context and request socket
 zmq::context_t context(1);
 zmq::socket_t socket_(context, ZMQ_REP);
-
-/*  
-//
-//  Helper methods for testing purposes.
-//
-*/
 
 //  prints the encoded content (buf) as python bytes
 void print_as_python_bytes(std::string const& buf)
@@ -31,7 +31,7 @@ void print_as_python_bytes(std::string const& buf)
     std::cout << std::dec << "\'" << std::endl;
 }
 
-//  checker method to check sending of encoded messages is OK for a socket to send.
+// sends an encoded (string) message over zmq
 void send(const std::string& message_str)
 {
   size_t msg_size = message_str.size();
@@ -40,26 +40,24 @@ void send(const std::string& message_str)
   socket_.send(msg);
 }
 
-// checker method to see how a zmq socket would receive the messages.
-std::string receive(){
-
+// receives a request over zmq, returns the string reply
+std::string receive()
+{
     zmq::message_t request;
     socket_.recv (&request);
     //  Dump the message as text or binary
     int size = request.size();
     std::string request_string(static_cast<char*>(request.data()), size);
-
     return request_string;
-
 }
 
 
 int main(){
 
-
     socket_.bind("tcp://*:5555");
     printf("server Booted \n");
 
+    //   create a msgpack encoder
     MsgPackEncoder encoder;
 
     // receive request
@@ -71,10 +69,13 @@ int main(){
     //  decode the message into a fem2controlmsg using encoder
     Fem2ControlMsg decoded_request = encoder.decode(encoded_request);
 
+    std::cout << decoded_request.get_posix_timestamp() << std::endl;
+    std::cout << decoded_request.get_string_timestamp() << std::endl;
+
     //encode the fem2controlmsg reply 
     std::string encoded_reply = encoder.encode(decoded_request);
 
-    // send the encoded reply via zmq.
+    // send the encoded reply via zmq for comparison
     send(encoded_reply);
 
 }
