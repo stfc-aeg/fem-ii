@@ -180,6 +180,10 @@ public:
     typedef boost::bimap<std::string, DataWidth> DataWidthMap;
     typedef DataWidthMap::value_type DataWidthMapEntry;
 
+    //old payload
+    void append_payload(std::vector<msgpack::type::variant>);
+
+    //void append_payload(msgpack::type::variant);
 
     void init_maps();
 
@@ -192,10 +196,30 @@ public:
 
     //! Overloaded inequality relational operator
     friend bool operator !=(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg);
+    
+
+    //msgpack::type::variant the_payload;
+
+
+    // old flat payload.
+    std::vector<msgpack::type::variant> payload;
+
+    template <typename T> T get_payload_at(int const& index)
+    {
+        try{
+            return get_value<T>(this->payload.at(index));
+        }
+        catch(...){
+            return 0;
+            //to do exception
+        }
+    }
+
+    template <typename T> T get_value(msgpack::type::variant const& value);
 
     //  Definition of the header struct for msgpack encoding 
     //  TODO Define the payload for msgpack encoding
-    MSGPACK_DEFINE_MAP(header);
+    MSGPACK_DEFINE_MAP(header, payload);
 
 private:
 
@@ -216,6 +240,7 @@ private:
     };
 
     Header header;
+
     static CommandTypeMap cmd_type_map_;          //!< Bi-directional command type map
     static AccessTypeMap access_type_map_;        //!< Bi-directional access type map
     static DataWidthMap data_width_map_;          //!< Bi-directional data width map

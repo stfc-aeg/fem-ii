@@ -61,8 +61,25 @@ int main(){
 
     //initialise a control msg with values.
     Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    //  testing vector for nested payloads
+    std::vector<int> nest;
+    nest.push_back(1);
+    nest.push_back(2);
+    nest.push_back(3);
 
+    // flat payload test
+    std::vector<msgpack::type::variant> test;
+    test.push_back(0x05);
+    test.push_back(0xff);
+    test.push_back("test");
+    //test.push_back(nest); // this breaks the recursion in a std::vector<variant>
+
+    request.append_payload(test);
+    
     //Fem2ControlMsg request; //default message
+
+    //  check the timestamps have been encoded ok
     std::cout << request.get_posix_timestamp() << std::endl;
     std::cout << request.get_string_timestamp() << std::endl;
 
@@ -83,7 +100,11 @@ int main(){
 
     // decode the response using the encoder
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
-  
+
+    //  testing ground for flat vector payload 
+    std::string payload_string = reply.get_payload_at<std::string>(2);
+    std::cout << "Payload string: " << payload_string << std::endl;
+    
     //assert encoded/decoded round trip msgs are the same thing
     assert(request == reply);
     std::cout << "MATCH" << std::endl;
