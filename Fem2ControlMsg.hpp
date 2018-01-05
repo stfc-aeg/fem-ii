@@ -180,14 +180,30 @@ public:
     typedef boost::bimap<std::string, DataWidth> DataWidthMap;
     typedef DataWidthMap::value_type DataWidthMapEntry;
 
-    //old payload
-    void append_payload(std::vector<msgpack::type::variant>);
-
-    //void append_payload(msgpack::type::variant);
-
     void init_maps();
-
     std::string print();
+
+    //append -> add another item
+    void append_payload(msgpack::type::variant);
+
+    //set -> set the whole thing
+    template <typename T> void set_payload(T const& the_payload)
+    {
+        this->payload = the_payload;
+    }
+
+    template<typename E> void set_payload(std::vector<int> const& the_payload){
+         
+       // iterate over integer vector and create a variant
+        std::vector<msgpack::type::variant> temp;
+
+        for (int i = the_payload.begin(); i != the_payload.end(); i++ ) {
+            temp.push_back(*i);
+        }   
+
+        this->payload = temp;
+    }
+
     //  Overloaded outstream operator
     friend std::ostream& operator <<(std::ostream& os, Fem2ControlMsg& control_message);
 
@@ -197,15 +213,16 @@ public:
     //! Overloaded inequality relational operator
     friend bool operator !=(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg);
     
+    // new nested payload
+    msgpack::type::variant payload;
 
-    //msgpack::type::variant the_payload;
+    // helper method for checking payload type.
+    void get_payload_type();
 
-
-    // old flat payload.
-    std::vector<msgpack::type::variant> payload;
-
+    //  old code for vector specifics
     template <typename T> T get_payload_at(int const& index)
     {
+        /*
         try{
             return get_value<T>(this->payload.at(index));
         }
@@ -213,8 +230,8 @@ public:
             return 0;
             //to do exception
         }
+        */
     }
-
     template <typename T> T get_value(msgpack::type::variant const& value);
 
     //  Definition of the header struct for msgpack encoding 

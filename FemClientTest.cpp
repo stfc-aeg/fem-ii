@@ -62,21 +62,45 @@ int main(){
     //initialise a control msg with values.
     Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
     
-    //  testing vector for nested payloads
-    std::vector<int> nest;
-    nest.push_back(1);
-    nest.push_back(2);
-    nest.push_back(3);
+    //--------------------payload setting testing--------------------//
 
-    // flat payload test
-    std::vector<msgpack::type::variant> test;
-    test.push_back(0x05);
-    test.push_back(0xff);
-    test.push_back("test");
-    //test.push_back(nest); // this breaks the recursion in a std::vector<variant>
+    //  vector of ints - not natively supported by msgpack
+    std::vector<int> vect_int;
+    vect_int.push_back(0);
+    vect_int.push_back(1);
+    vect_int.push_back(2);
 
-    request.append_payload(test);
+    //natively supported vector of chars
+    std::vector<char> vect_chars;
+    vect_chars.push_back('c');
+    vect_chars.push_back('h');
+    vect_chars.push_back('g');
+
+    // natively supported types
+    int an_int = 1;
+    char a_char = 'a';
+    bool a_bool = true;
+    std::string a_string = "string";
+
+    // flat vector of variant types natively supported
+    std::vector<msgpack::type::variant> flat_variant_vect;
+    flat_variant_vect.push_back(0x05);
+    flat_variant_vect.push_back("test");
+    // still don't know what happens when I nest a vector<int>
+
+    //nested vector of variant types. ok with vect_char, not ok with vect_int
+    std::vector<msgpack::type::variant> nested_variant_vector;
+    nested_variant_vector.push_back(vect_chars);    //OK
+    //nested_variant_vector.push_back(vect_int);      //NOT OK
     
+    request.set_payload(vect_chars); // char set
+    request.set_payload<std::vector<int> >(vect_int); // overloaded specialisation
+    
+    //----------------------------------------//
+
+
+
+
     //Fem2ControlMsg request; //default message
 
     //  check the timestamps have been encoded ok
@@ -101,10 +125,13 @@ int main(){
     // decode the response using the encoder
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
 
-    //  testing ground for flat vector payload 
-    std::string payload_string = reply.get_payload_at<std::string>(2);
-    std::cout << "Payload string: " << payload_string << std::endl;
-    
+    //---------------payload type testing-------------------------//
+
+    reply.get_payload_type();
+
+    //----------------------------------------//
+
+
     //assert encoded/decoded round trip msgs are the same thing
     assert(request == reply);
     std::cout << "MATCH" << std::endl;

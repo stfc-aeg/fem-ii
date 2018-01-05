@@ -124,44 +124,77 @@ void Fem2ControlMsg::set_timeout(int16_t timeout){
 
 void Fem2ControlMsg::init_maps(){
 
-    this->cmd_type_map_.insert(CommandTypeMapEntry("read", CMD_READ));
-    this->cmd_type_map_.insert(CommandTypeMapEntry("write", CMD_WRITE));
-    this->cmd_type_map_.insert(CommandTypeMapEntry("config", CMD_CONFIGURE));
-    this->cmd_type_map_.insert(CommandTypeMapEntry("notify", CMD_NOTIFY));
-    this->cmd_type_map_.insert(CommandTypeMapEntry("alert", CMD_ALERT));
-    this->cmd_type_map_.insert(CommandTypeMapEntry("plugin", CMD_PLUGIN));
-    this->cmd_type_map_.insert(CommandTypeMapEntry("unsupported command", CMD_UNSUPPORTED));
-
-    this->access_type_map_.insert(AccessTypeMapEntry("i2c", ACCESS_I2C));
-    this->access_type_map_.insert(AccessTypeMapEntry("xadc", ACCESS_XADC));
-    this->access_type_map_.insert(AccessTypeMapEntry("gpio", ACCESS_GPIO));
-    this->access_type_map_.insert(AccessTypeMapEntry("rawreg", ACCESS_RAWREG));
-    this->access_type_map_.insert(AccessTypeMapEntry("ddr", ACCESS_DDR));
-    this->access_type_map_.insert(AccessTypeMapEntry("qdr", ACCESS_QDR));
-    this->access_type_map_.insert(AccessTypeMapEntry("qspi", ACCESS_QSPI));
-    this->access_type_map_.insert(AccessTypeMapEntry("unsupported acccess", ACCESS_UNSUPPORTED));
-    
-    this->ack_state_map_.insert(AckStateMapEntry("ack", ACK));
-    this->ack_state_map_.insert(AckStateMapEntry("nack", NACK));
-    this->ack_state_map_.insert(AckStateMapEntry("ack undefined", ACK_UNDEFINED));
-
-    //   to do - add data width to header or payload - Design Decision
-    this->data_width_map_.insert(DataWidthMapEntry("byte", WIDTH_BYTE));
-    this->data_width_map_.insert(DataWidthMapEntry("word", WIDTH_WORD));
-    this->data_width_map_.insert(DataWidthMapEntry("long", WIDTH_LONG));
-    this->data_width_map_.insert(DataWidthMapEntry("unsupported width", WIDTH_UNSUPPORTED));
-
+    if (cmd_type_map_.size() == 0){
+        this->cmd_type_map_.insert(CommandTypeMapEntry("read", CMD_READ));
+        this->cmd_type_map_.insert(CommandTypeMapEntry("write", CMD_WRITE));
+        this->cmd_type_map_.insert(CommandTypeMapEntry("config", CMD_CONFIGURE));
+        this->cmd_type_map_.insert(CommandTypeMapEntry("notify", CMD_NOTIFY));
+        this->cmd_type_map_.insert(CommandTypeMapEntry("alert", CMD_ALERT));
+        this->cmd_type_map_.insert(CommandTypeMapEntry("plugin", CMD_PLUGIN));
+        this->cmd_type_map_.insert(CommandTypeMapEntry("unsupported command", CMD_UNSUPPORTED));
+    }
+    if (access_type_map_.size() == 0){
+        this->access_type_map_.insert(AccessTypeMapEntry("i2c", ACCESS_I2C));
+        this->access_type_map_.insert(AccessTypeMapEntry("xadc", ACCESS_XADC));
+        this->access_type_map_.insert(AccessTypeMapEntry("gpio", ACCESS_GPIO));
+        this->access_type_map_.insert(AccessTypeMapEntry("rawreg", ACCESS_RAWREG));
+        this->access_type_map_.insert(AccessTypeMapEntry("ddr", ACCESS_DDR));
+        this->access_type_map_.insert(AccessTypeMapEntry("qdr", ACCESS_QDR));
+        this->access_type_map_.insert(AccessTypeMapEntry("qspi", ACCESS_QSPI));
+        this->access_type_map_.insert(AccessTypeMapEntry("unsupported acccess", ACCESS_UNSUPPORTED));
+    }
+    if (ack_state_map_.size() == 0){
+        this->ack_state_map_.insert(AckStateMapEntry("ack", ACK));
+        this->ack_state_map_.insert(AckStateMapEntry("nack", NACK));
+        this->ack_state_map_.insert(AckStateMapEntry("ack undefined", ACK_UNDEFINED));
+    }
+    //   to do - add data width to payload
+    if(data_width_map_.size() == 0){
+        this->data_width_map_.insert(DataWidthMapEntry("byte", WIDTH_BYTE));
+        this->data_width_map_.insert(DataWidthMapEntry("word", WIDTH_WORD));
+        this->data_width_map_.insert(DataWidthMapEntry("long", WIDTH_LONG));
+        this->data_width_map_.insert(DataWidthMapEntry("unsupported width", WIDTH_UNSUPPORTED));
+    }
 }
 
-void Fem2ControlMsg::append_payload(std::vector<msgpack::type::variant> the_payload){
+//  helper to check the type of the variant payload.
+void Fem2ControlMsg::get_payload_type(){
 
-    this->payload = the_payload;
+    if(this->payload.is_vector()){
+        printf("vector!");
+    }
+    else if(this->payload.is_vector_char()){
+        printf("vector char!");
+    }
+    else if(this->payload.is_map()){
+        printf("map!");
+    }
+    else if(this->payload.is_multimap()){
+        printf("multi map!");
+    }
+    else if(this->payload.is_uint64_t()){
+        printf("unsigned int!");
+    }
+    else if(this->payload.is_bool()){
+        printf("bool!");
+    }
+    else if(this->payload.is_string()){
+        printf("string!");
+    }
+    else if(this->payload.is_int64_t()){
+        printf("int!");
+    }
+    else{
+        printf("not a type I know");
+    }
+
 }
 
 //  TODO Validation/ Exceptions?
 std::string Fem2ControlMsg::print(){
 
-    init_maps();    // move init?
+    //guard init if already initialised.
+    init_maps();    // move initialisation?
 
     //  replace this with illegals?
     std::string command_string = "undefined";
@@ -229,27 +262,22 @@ template <> double Fem2ControlMsg::get_value(msgpack::type::variant const& value
     return value.as_double();
 }
 
-
-template <> std::vector<char> Fem2ControlMsg::get_value(msgpack::type::variant const& value)
+/*
+//figure out returning vectors?
+template <> std::vector<int> Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
-    return value.as_vector_char();
-    /*
+    return value.as_vector();
+    
     std::vector<int> return_vector;
-    /*
+    
     for (unsigned i=0; i < value.size(); i++){
         return_vector.push_back(static_cast<int>(value.at(i)));
     }
    
     return return_vector;
-    */
+    
 }
-
-
-
-
-
-
-
+*/
 
 //! Overloaded equality relational operator
 bool operator ==(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg){
