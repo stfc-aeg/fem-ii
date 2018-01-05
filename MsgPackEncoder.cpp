@@ -19,6 +19,8 @@ const Fem2ControlMsg MsgPackEncoder::decode(std::string the_msg){
     msgpack::unpacked unp;
     msgpack::unpack(unp, the_msg.data(), the_msg.size());
     msgpack::object obj = unp.get();
+
+    // could we return the msgpack::object? does that help?
     Fem2ControlMsg decoded = obj.as<Fem2ControlMsg>();
     return decoded;
 }
