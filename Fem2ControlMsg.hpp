@@ -180,27 +180,48 @@ public:
     typedef boost::bimap<std::string, DataWidth> DataWidthMap;
     typedef DataWidthMap::value_type DataWidthMapEntry;
 
+    // initialise the bimaps for enums
     void init_maps();
+
+    //returns the header and payload in string format.
     std::string print();
 
-    //append -> add another item
-    void append_payload(msgpack::type::variant);
+    /* 
+    Appends a data point (the_data) to the payload.
+    Currently throws a Fem2ControlMsg exception if the payload is undefined(not initialised)
+    And throws an excepton if the payload is not a vector and cannot be appended to
+    */ 
+    template <typename T> void append_payload(T const& the_data)
+    {
+        if(this->get_payload_type() != "undefined"){
+            if(this->payload.is_vector()){
+                this->payload.as_vector().push_back(the_data);
+            }
+            else{
+                throw Fem2ControlMsgException("Unable to append data, payload not a vector.");
+            }
+        }
+        else{
+            throw Fem2ControlMsgException("Payload has not been initialised");
+        } 
+    }
 
-    //set -> set the whole thing
+    //Sets the payload to the_payload
+    // TODO - checks of prior initialisation
     template <typename T> void set_payload(T const& the_payload)
     {
         this->payload = the_payload;
     }
 
+    //Specialisation of the set_payload template for vector<int> not natively supported by msgpack
     template<typename E> void set_payload(std::vector<int> const& the_payload){
          
        // iterate over integer vector and create a variant
         std::vector<msgpack::type::variant> temp;
 
-        for (int i = the_payload.begin(); i != the_payload.end(); i++ ) {
+        for (auto i = the_payload.begin(); i != the_payload.end(); i++ ) {
             temp.push_back(*i);
         }   
-
         this->payload = temp;
     }
 
@@ -213,13 +234,13 @@ public:
     //! Overloaded inequality relational operator
     friend bool operator !=(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg);
     
-    // new nested payload
+    // the payload
     msgpack::type::variant payload;
 
-    // helper method for checking payload type.
-    void get_payload_type();
+    // Returns a string representation of the payload type.
+    std::string get_payload_type();
 
-    //  old code for vector specifics
+    //To be used in getting data values in vector payloads
     template <typename T> T get_payload_at(int const& index)
     {
         /*
@@ -232,6 +253,8 @@ public:
         }
         */
     }
+
+    //to be used in getting data values in vector payloads
     template <typename T> T get_value(msgpack::type::variant const& value);
 
     //  Definition of the header struct for msgpack encoding 

@@ -93,13 +93,17 @@ int main(){
     nested_variant_vector.push_back(vect_chars);    //OK
     //nested_variant_vector.push_back(vect_int);      //NOT OK
     
-    request.set_payload(vect_chars); // char set
-    request.set_payload<std::vector<int> >(vect_int); // overloaded specialisation
+    //set the payload with the flat vector
+    request.set_payload(flat_variant_vect);
+    int append_int = 32;
+    printf("payload is a %s \n", request.get_payload_type().c_str());
+    //append the integer onto the end of the payload. all ok. 
+    request.append_payload(append_int);
+
+    //request.set_payload(vect_chars); // char set
+    //request.set_payload<std::vector<int> >(vect_int); // overloaded specialisation
     
     //----------------------------------------//
-
-
-
 
     //Fem2ControlMsg request; //default message
 
@@ -126,8 +130,7 @@ int main(){
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
 
     //---------------payload type testing-------------------------//
-
-    reply.get_payload_type();
+    printf("payload is a %s \n", reply.get_payload_type().c_str());
 
     //----------------------------------------//
 

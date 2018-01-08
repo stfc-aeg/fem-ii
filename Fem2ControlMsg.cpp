@@ -157,36 +157,35 @@ void Fem2ControlMsg::init_maps(){
     }
 }
 
-//  helper to check the type of the variant payload.
-void Fem2ControlMsg::get_payload_type(){
+// returns the type of the payload as a string representation, if not initialised, return_type=undefined.
+std::string Fem2ControlMsg::get_payload_type(){
 
+    std::string return_type = "undefined";
     if(this->payload.is_vector()){
-        printf("vector!");
+        return_type = "vector";
     }
     else if(this->payload.is_vector_char()){
-        printf("vector char!");
+        return_type = "vector char";
     }
     else if(this->payload.is_map()){
-        printf("map!");
+        return_type = "map";
     }
     else if(this->payload.is_multimap()){
-        printf("multi map!");
+        return_type = "multi map";
     }
     else if(this->payload.is_uint64_t()){
-        printf("unsigned int!");
+        return_type = "unsigned int";
     }
     else if(this->payload.is_bool()){
-        printf("bool!");
+        return_type = "bool";
     }
     else if(this->payload.is_string()){
-        printf("string!");
+        return_type = "string";
     }
     else if(this->payload.is_int64_t()){
-        printf("int!");
+        return_type = "signed int";
     }
-    else{
-        printf("not a type I know");
-    }
+    return return_type;
 
 }
 
