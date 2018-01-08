@@ -8,9 +8,9 @@ namespace Femii
 //  TODO - Payload initialisation
 Fem2ControlMsg::Fem2ControlMsg() : header(){
    
-    this->header.cmd_type_ = CommandType::CMD_UNSUPPORTED;
-    this->header.access_type_ = AccessType::ACCESS_UNSUPPORTED;
-    this->header.ack_state_ = AckState::ACK_UNDEFINED;
+    this->header.cmd_type_ = CMD_UNSUPPORTED;
+    this->header.access_type_ = ACCESS_UNSUPPORTED;
+    this->header.ack_state_ = ACK_UNDEFINED;
     this->header.req_id_ = 0x0000;
     this->header.timeout_ = -1;
     this->header.retries_ = -1;

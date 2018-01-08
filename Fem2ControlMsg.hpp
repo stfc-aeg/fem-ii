@@ -9,6 +9,7 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include <msgpack.hpp>
 #include "boost/bimap.hpp"
+#include "PayloadStructs.hpp"
 
 
 #ifndef _WIN32
@@ -30,6 +31,8 @@ inline static std::string to_string_timestamp(boost::posix_time::ptime the_time)
 
 namespace Femii
 {
+
+
 //! Fem2ControlMsgException
 class Fem2ControlMsgException : public std::exception
 {
@@ -74,7 +77,7 @@ class Fem2ControlMsg
 {
 
 public: 
-    
+
     //  Supported command types, default = CMD_UNSUPPORTED (-1)
     enum CommandType{
 
@@ -112,16 +115,6 @@ public:
         NACK = 0,
         ACK = 1,
 
-    };
-
-    //  Supported data widths, default = WIDTH_UNSUPPORTED (-1) -- is this payload?
-    enum DataWidth{
-
-        WIDTH_UNSUPPORTED = -1, 
-        WIDTH_BYTE = 0,         //8 bits
-        WIDTH_WORD = 1,         //16 bits
-        WIDTH_LONG = 2,         //32 bits
-       
     };
 
     //  Default constructor, required for msgpack encoding/decoding
@@ -240,18 +233,35 @@ public:
     // Returns a string representation of the payload type.
     std::string get_payload_type();
 
+    //will return a struct corresponding to the type of msg.
+    template <typename T> T get_payload(){
+
+        if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_I2C){
+
+            I2C_READ i2c_payload;
+            i2c_payload.i2c_bus = this->get_payload_at<int>(0);
+            i2c_payload.slave_address = this->get_payload_at<int>(1);
+            i2c_payload.i2c_register = this->get_payload_at<int>(2);
+            i2c_payload.data_width = this->get_payload_at<int>(3); // doesn't work.
+        }
+        else{
+            throw Fem2ControlMsgException("Unknown Payload Type");
+        }
+        
+    }
+
     //To be used in getting data values in vector payloads
     template <typename T> T get_payload_at(int const& index)
     {
-        /*
+        //should test for vector.
         try{
-            return get_value<T>(this->payload.at(index));
+            return get_value<T>(this->payload.as_vector().at(index));   // does this need a guard.
         }
         catch(...){
-            return 0;
+            return static_cast<T>(0);
             //to do exception
         }
-        */
+
     }
 
     //to be used in getting data values in vector payloads
@@ -286,7 +296,8 @@ private:
     static DataWidthMap data_width_map_;          //!< Bi-directional data width map
     static AckStateMap ack_state_map_;            //!< Bi-directional ack state map            
     
-};  
+}; 
+ 
 
 };
 
@@ -294,7 +305,7 @@ private:
 MSGPACK_ADD_ENUM(Femii::Fem2ControlMsg::CommandType);
 MSGPACK_ADD_ENUM(Femii::Fem2ControlMsg::AccessType);
 MSGPACK_ADD_ENUM(Femii::Fem2ControlMsg::AckState);
-MSGPACK_ADD_ENUM(Femii::Fem2ControlMsg::DataWidth);
+MSGPACK_ADD_ENUM(Femii::DataWidth);
 
 //  msgpack.hpp must be re-included after defining enums.
 #include <msgpack.hpp>

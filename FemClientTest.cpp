@@ -60,7 +60,7 @@ int main(){
     printf("Client Booted \n");
 
     //initialise a control msg with values.
-    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
     
     //--------------------payload setting testing--------------------//
 
@@ -82,6 +82,11 @@ int main(){
     bool a_bool = true;
     std::string a_string = "string";
 
+    int test_array[200];
+
+    for(int i =0; i < 200; i++){
+        test_array[i] = i;
+    }
     // flat vector of variant types natively supported
     std::vector<msgpack::type::variant> flat_variant_vect;
     flat_variant_vect.push_back(0x05);
@@ -91,6 +96,7 @@ int main(){
     //nested vector of variant types. ok with vect_char, not ok with vect_int
     std::vector<msgpack::type::variant> nested_variant_vector;
     nested_variant_vector.push_back(vect_chars);    //OK
+    nested_variant_vector.push_back(test_array);    //normal int arrays are fine
     //nested_variant_vector.push_back(vect_int);      //NOT OK
     
     //set the payload with the flat vector
@@ -99,6 +105,21 @@ int main(){
     printf("payload is a %s \n", request.get_payload_type().c_str());
     //append the integer onto the end of the payload. all ok. 
     request.append_payload(append_int);
+
+    std::vector<msgpack::type::variant> i2cRead;
+    i2cRead.push_back(0x01);
+    i2cRead.push_back(0x02);
+    i2cRead.push_back(0x03);
+    i2cRead.push_back(WIDTH_BYTE);
+
+    request.set_payload(i2cRead);
+
+    I2C_READ testread = request.get_payload<I2C_READ>();
+    printf("I2C bus : %s \n", std::to_string(testread.i2c_bus).c_str());
+    printf("I2C slave address : %s \n", std::to_string(testread.slave_address).c_str());
+    printf("I2C register : %s \n", std::to_string(testread.i2c_register).c_str());
+    printf("I2C data width : %s \n", std::to_string(testread.data_width).c_str());
+
 
     //request.set_payload(vect_chars); // char set
     //request.set_payload<std::vector<int> >(vect_int); // overloaded specialisation
@@ -133,6 +154,7 @@ int main(){
     printf("payload is a %s \n", reply.get_payload_type().c_str());
 
     //----------------------------------------//
+
 
 
     //assert encoded/decoded round trip msgs are the same thing
