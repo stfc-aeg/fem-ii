@@ -170,8 +170,8 @@ public:
     typedef AckStateMap::value_type AckStateMapEntry;
 
     //! Internal bi-directional mapping of Data width from string to enumerated DataWidth
-    typedef boost::bimap<std::string, DataWidth> DataWidthMap;
-    typedef DataWidthMap::value_type DataWidthMapEntry;
+    //typedef boost::bimap<std::string, DataWidth> DataWidthMap;
+    //typedef DataWidthMap::value_type DataWidthMapEntry;
 
     // initialise the bimaps for enums
     void init_maps();
@@ -206,6 +206,19 @@ public:
         this->payload = the_payload;
     }
 
+   //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
+    template<typename E> void set_payload(I2C_READ const& the_payload){
+         
+       // iterate over integer vector and create a variant
+        std::vector<msgpack::type::variant> i2c_read_vect;
+
+        i2c_read_vect.push_back(the_payload.i2c_bus);
+        i2c_read_vect.push_back(the_payload.slave_address);
+        i2c_read_vect.push_back(the_payload.i2c_register);
+        i2c_read_vect.push_back(static_cast<int>(the_payload.data_width));
+        this->payload = i2c_read_vect;
+    }
+
     //Specialisation of the set_payload template for vector<int> not natively supported by msgpack
     template<typename E> void set_payload(std::vector<int> const& the_payload){
          
@@ -214,6 +227,20 @@ public:
 
         for (auto i = the_payload.begin(); i != the_payload.end(); i++ ) {
             temp.push_back(*i);
+        }   
+        this->payload = temp;
+    }
+
+
+    //Specialisation of the set_payload template for vector<int> not natively supported by msgpack
+    template<typename E> void set_payload(std::vector<u8> const& the_payload){
+
+       // iterate over integer vector and create a variant
+        std::vector<msgpack::type::variant> temp;
+
+        for (auto i = the_payload.begin(); i != the_payload.end(); i++ ) {
+            uint8_t test = *i;
+            temp.push_back(test);
         }   
         this->payload = temp;
     }
@@ -242,13 +269,18 @@ public:
             i2c_payload.i2c_bus = this->get_payload_at<int>(0);
             i2c_payload.slave_address = this->get_payload_at<int>(1);
             i2c_payload.i2c_register = this->get_payload_at<int>(2);
-            i2c_payload.data_width = this->get_payload_at<int>(3); // doesn't work.
+            i2c_payload.data_width = this->get_payload_at<DataWidth>(3);
+            //i2c_payload.the_data = this->get_payload_at<std::vector<uint8_t> >(4);
+            return i2c_payload; 
         }
+        // if config messages -> map style 
         else{
             throw Fem2ControlMsgException("Unknown Payload Type");
         }
         
     }
+
+    //TODO
 
     //To be used in getting data values in vector payloads
     template <typename T> T get_payload_at(int const& index)
@@ -258,7 +290,7 @@ public:
             return get_value<T>(this->payload.as_vector().at(index));   // does this need a guard.
         }
         catch(...){
-            return static_cast<T>(0);
+            return static_cast<T>(0); // this is nonsense
             //to do exception
         }
 
@@ -293,7 +325,7 @@ private:
 
     static CommandTypeMap cmd_type_map_;          //!< Bi-directional command type map
     static AccessTypeMap access_type_map_;        //!< Bi-directional access type map
-    static DataWidthMap data_width_map_;          //!< Bi-directional data width map
+    //static DataWidthMap data_width_map_;          //!< Bi-directional data width map
     static AckStateMap ack_state_map_;            //!< Bi-directional ack state map            
     
 }; 

@@ -1,4 +1,5 @@
 #include "Fem2ControlMsg.hpp"
+#include <typeinfo>
 
 typedef unsigned char u8;
 namespace Femii
@@ -14,6 +15,7 @@ Fem2ControlMsg::Fem2ControlMsg() : header(){
     this->header.req_id_ = 0x0000;
     this->header.timeout_ = -1;
     this->header.retries_ = -1;
+
 
 };
 
@@ -122,6 +124,7 @@ void Fem2ControlMsg::set_timeout(int16_t timeout){
     this->header.timeout_ = timeout;
 };
 
+// initialisation of the bi-maps between enumerations and string representations
 void Fem2ControlMsg::init_maps(){
 
     if (cmd_type_map_.size() == 0){
@@ -148,14 +151,17 @@ void Fem2ControlMsg::init_maps(){
         this->ack_state_map_.insert(AckStateMapEntry("nack", NACK));
         this->ack_state_map_.insert(AckStateMapEntry("ack undefined", ACK_UNDEFINED));
     }
-    //   to do - add data width to payload
+    /*
     if(data_width_map_.size() == 0){
         this->data_width_map_.insert(DataWidthMapEntry("byte", WIDTH_BYTE));
         this->data_width_map_.insert(DataWidthMapEntry("word", WIDTH_WORD));
         this->data_width_map_.insert(DataWidthMapEntry("long", WIDTH_LONG));
         this->data_width_map_.insert(DataWidthMapEntry("unsupported width", WIDTH_UNSUPPORTED));
     }
+    */
+    //else do nothing
 }
+
 
 // returns the type of the payload as a string representation, if not initialised, return_type=undefined.
 std::string Fem2ControlMsg::get_payload_type(){
@@ -229,8 +235,14 @@ std::string Fem2ControlMsg::print(){
     output += "    Retries : " + std::to_string(get_retries()) + ",\n";
     output += "    Request ID: " + std::to_string(get_req_id()) + ",\n";
     output += "    Timestamp : " + get_string_timestamp() + ",\n}\n";
-    output += "PAYLOAD : {\n}\n";
+    output += "PAYLOAD : {\n";
 
+    // test by type of message -> 
+
+    I2C_READ printout = this->get_payload<I2C_READ>();
+    output += printout.print();
+    output += "}\n";
+    //TODO PAYLOAD
     return output;
 }
 
@@ -261,22 +273,81 @@ template <> double Fem2ControlMsg::get_value(msgpack::type::variant const& value
     return value.as_double();
 }
 
-/*
-//figure out returning vectors?
-template <> std::vector<int> Fem2ControlMsg::get_value(msgpack::type::variant const& value)
+//  template specialisation for returning data values within the payload as a DataWidth ENUM.
+template <> DataWidth Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
-    return value.as_vector();
-    
-    std::vector<int> return_vector;
-    
-    for (unsigned i=0; i < value.size(); i++){
-        return_vector.push_back(static_cast<int>(value.at(i)));
+    int as_number;
+    DataWidth return_width;
+
+    if (value.is_uint64_t())
+    {
+        as_number = static_cast<int>(value.as_uint64_t());
     }
+    else if (value.is_int64_t())
+    {
+        as_number =  static_cast<int>(value.as_int64_t());
+    }
+    else
+    {
+        return_width = WIDTH_UNSUPPORTED;
+        return return_width;
+        //TODO exception here
+    }
+
+    switch(as_number){
+        case -1:
+            return_width = WIDTH_UNSUPPORTED;
+            break;
+        case 0:
+            return_width = WIDTH_BYTE;
+            break;
+        case 1:
+            return_width = WIDTH_WORD;
+            break;
+        case 2:
+            return_width = WIDTH_LONG;
+            break;
+        default: 
+            return_width = WIDTH_UNSUPPORTED;
+            break;
+    }
+    return return_width; 
+}
+
+
+//figure out returning vectors?
+template <> std::vector<char> Fem2ControlMsg::get_value(msgpack::type::variant const& value)
+{
+    return value.as_vector_char();
+}
+
+
+//figure out returning vectors?
+template <> std::vector<uint8_t> Fem2ControlMsg::get_value(msgpack::type::variant const& value)
+{
+    std::cout<< "i was called" << std::endl;
+    std::vector<uint8_t> return_vector;
+
+    //boost::get<std::vector<uint8_t> >(value);// doesn't work
+
+    if(value.is_vector()){
+        std::cout << "its a vector" << std::endl; //fails
+    }
+    std::vector<msgpack::type::variant> test_vect = value.as_vector();
+    std::cout<< " size = " << std::to_string(test_vect.size()) << std::endl;
+
+    //std::vector<msgpack::type::fix_uint8variant
+    //for (auto i = test_vect.begin(); i != test_vect.end(); i++ ) {
+    for (int i =0; i< test_vect.size(); i++){    
+    
+        uint8_t test = static_cast<uint8_t>(test_vect.at(i).as_uint64_t());
+        std::cout << std::to_string(test) << std::endl;  
+        return_vector.push_back(test);
+    }   
    
     return return_vector;
-    
+
 }
-*/
 
 //! Overloaded equality relational operator
 bool operator ==(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg){
@@ -307,11 +378,10 @@ std::ostream& operator <<(std::ostream& os, Fem2ControlMsg& control_message){
     return os;
 }
 
-//  TODO - Boost::variant PAYLOAD features
 
 // Definition of static member variables used for type and value mapping
 Fem2ControlMsg::CommandTypeMap Fem2ControlMsg::cmd_type_map_;
 Fem2ControlMsg::AccessTypeMap Fem2ControlMsg::access_type_map_;
-Fem2ControlMsg::DataWidthMap Fem2ControlMsg::data_width_map_;
+//Fem2ControlMsg::DataWidthMap Fem2ControlMsg::data_width_map_;
 Fem2ControlMsg::AckStateMap Fem2ControlMsg::ack_state_map_;
 }; //   Fem2ControlMsg
