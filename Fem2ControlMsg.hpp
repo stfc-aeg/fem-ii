@@ -216,6 +216,10 @@ public:
         i2c_read_vect.push_back(the_payload.slave_address);
         i2c_read_vect.push_back(the_payload.i2c_register);
         i2c_read_vect.push_back(static_cast<int>(the_payload.data_width));
+        for (auto i = the_payload.data.begin(); i!= the_payload.data.end(); i++)
+        {
+            i2c_read_vect.push_back(*i);
+        }
         this->payload = i2c_read_vect;
     }
 

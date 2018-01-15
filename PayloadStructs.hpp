@@ -45,6 +45,7 @@ struct I2C_READ{
     int slave_address;
     int i2c_register;
     Femii::DataWidth data_width;
+    std::vector<uint8_t> data;
     //std::vector<msgpack::type::variant> the_data;
 
     std::string print(){
