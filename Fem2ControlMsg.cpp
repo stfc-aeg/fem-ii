@@ -349,6 +349,21 @@ template <> std::vector<uint8_t> Fem2ControlMsg::get_value(msgpack::type::varian
 
 }
 
+
+      //Specialisation of the set_payload template for vector<int> not natively supported by msgpack
+std::vector<msgpack::type::variant> Fem2ControlMsg::to_variant_vect(std::vector<uint8_t> const& the_vector){
+
+    // iterate over integer vector and create a variant
+    std::vector<msgpack::type::variant> temp;
+
+    for (auto i = the_vector.begin(); i != the_vector.end(); i++ ) {
+        uint8_t test = *i;
+        temp.push_back(test);
+    }   
+    return temp;
+}
+
+
 //! Overloaded equality relational operator
 bool operator ==(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg){
 

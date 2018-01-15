@@ -178,6 +178,7 @@ public:
 
     //returns the header and payload in string format.
     std::string print();
+    std::vector<msgpack::type::variant> to_variant_vect(std::vector<uint8_t> const& the_vector);
 
     /* 
     Appends a data point (the_data) to the payload.
@@ -216,6 +217,9 @@ public:
         i2c_read_vect.push_back(the_payload.slave_address);
         i2c_read_vect.push_back(the_payload.i2c_register);
         i2c_read_vect.push_back(static_cast<int>(the_payload.data_width));
+        std::cout << "length: " << std::to_string(the_payload.data_length) << std::endl;
+        std::vector<msgpack::type::variant> variant_data = this->to_variant_vect(the_payload.the_data);
+        i2c_read_vect.push_back(variant_data);
         this->payload = i2c_read_vect;
     }
 
@@ -270,7 +274,17 @@ public:
             i2c_payload.slave_address = this->get_payload_at<int>(1);
             i2c_payload.i2c_register = this->get_payload_at<int>(2);
             i2c_payload.data_width = this->get_payload_at<DataWidth>(3);
-            //i2c_payload.the_data = this->get_payload_at<std::vector<uint8_t> >(4);
+
+            int offset = 4;
+            std::vector<uint8_t> variant_data; 
+
+            for(int i=offset; i < (i2c_payload.data_length + offset); i++){
+
+                variant_data.push_back(this->get_payload_at<int>(i));
+            }
+
+            i2c_payload.the_data = variant_data;
+            
             return i2c_payload; 
         }
         // if config messages -> map style 

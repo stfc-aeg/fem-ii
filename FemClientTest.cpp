@@ -121,26 +121,32 @@ int main(){
     
 
     //-------- set with vector<variant> as I2C READ -----//
+    /*
     std::vector<msgpack::type::variant> i2cRead;
     i2cRead.push_back(1);
     i2cRead.push_back(2);
     i2cRead.push_back(3);
     int the_width = WIDTH_BYTE;
-    uint8_t the_data[20];
-
-    for(uint8_t i =0; i < 20; i++){
-        the_data[i] = i;
-    }
+  
 
     i2cRead.push_back(the_width); // problem if direct as ENUM
     i2cRead.push_back(the_data);
     request.set_payload(i2cRead);
+    */
 
+    std::vector<uint8_t> this_data;
+    
+    for(uint8_t i =0; i < 20; i++){
+        this_data.push_back(i);
+    }
+    
     I2C_READ the_read;
     the_read.i2c_bus = 1;
     the_read.slave_address = 2;
     the_read.i2c_register = 3;
     the_read.data_width = WIDTH_BYTE;
+    the_read.the_data = this_data;
+    the_read.set_length();
 
     request.set_payload<I2C_READ>(the_read);
 
@@ -197,10 +203,12 @@ int main(){
 
     //----------------------------------------//
 
+    I2C_READ the_read_back = reply.get_payload<I2C_READ>();
     //assert encoded/decoded round trip msgs are the same thing
     assert(request == reply);
     assert(the_read == the_read_back);
     std::cout << "MATCH" << std::endl;
+    
 
     //print the fem2controlmsg (header only) as a string.
     std::cout << reply;

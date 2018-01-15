@@ -45,7 +45,14 @@ struct I2C_READ{
     int slave_address;
     int i2c_register;
     Femii::DataWidth data_width;
-    //std::vector<msgpack::type::variant> the_data;
+    std::vector<uint8_t> the_data;
+    int data_length;
+
+    void set_length(){
+
+        this->data_length = this->the_data.size();
+
+    }
 
     std::string print(){
         std::string output = "";
@@ -62,6 +69,8 @@ struct I2C_READ{
         equal += (lefthand_read.slave_address == righthand_read.slave_address);
         equal += (lefthand_read.i2c_register == righthand_read.i2c_register);
         equal += (lefthand_read.data_width == righthand_read.data_width);
+        equal += (lefthand_read.data_length == righthand_read.data_length);
+        equal += (lefthand_read.the_data == righthand_read.the_data);
         //the_data equality.
         return equal;
     }
