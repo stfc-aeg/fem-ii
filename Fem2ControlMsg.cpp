@@ -198,8 +198,7 @@ std::string Fem2ControlMsg::get_payload_type(){
 //  TODO Validation/ Exceptions?
 std::string Fem2ControlMsg::print(){
 
-    //guard init if already initialised.
-    init_maps();    // move initialisation?
+    init_maps();
 
     //  replace this with illegals?
     std::string command_string = "undefined";
@@ -215,12 +214,6 @@ std::string Fem2ControlMsg::print(){
     {
         access_string = access_type_map_.right.at(get_access_type());
     }
-    /* TODO
-    if (data_width_map_.right.count(get_data_width()))
-    {
-        data_width = data_width_map_.right.at(get_data_width());
-    }
-    */
     if (ack_state_map_.right.count(get_ack_state()))
     {
         ack_string = ack_state_map_.right.at(get_ack_state());
@@ -238,12 +231,20 @@ std::string Fem2ControlMsg::print(){
     output += "PAYLOAD : {\n";
 
     // test by type of message -> 
-
-    I2C_READ printout = this->get_payload<I2C_READ>();
-    output += printout.print();
-    output += "}\n";
-    //TODO PAYLOAD
+    if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_I2C){
+        I2C_READ printout = this->get_payload<I2C_READ>(); // object creation - deletion fix
+        output += printout.print();
+    }
+    else{
+        throw Fem2ControlMsgException("Unrecognised Payload Type");
+    }
+    output += "\n}\n";
     return output;
+}
+
+template <> uint8_t Fem2ControlMsg::get_value(msgpack::type::variant const& value)
+{
+    return static_cast<uint8_t>(value.as_uint64_t());
 }
 
 template <> int Fem2ControlMsg::get_value(msgpack::type::variant const& value)
@@ -258,6 +259,7 @@ template <> int Fem2ControlMsg::get_value(msgpack::type::variant const& value)
     }
     else
     {
+        std::cout << "Not an int64 or an uint64" << std::endl;
         return 0;
         //TODO exception here
     }
@@ -321,14 +323,12 @@ template <> std::vector<char> Fem2ControlMsg::get_value(msgpack::type::variant c
     return value.as_vector_char();
 }
 
-
+/*
 //figure out returning vectors?
 template <> std::vector<uint8_t> Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
     std::cout<< "i was called" << std::endl;
     std::vector<uint8_t> return_vector;
-
-    //boost::get<std::vector<uint8_t> >(value);// doesn't work
 
     if(value.is_vector()){
         std::cout << "its a vector" << std::endl; //fails
@@ -344,20 +344,19 @@ template <> std::vector<uint8_t> Fem2ControlMsg::get_value(msgpack::type::varian
         std::cout << std::to_string(test) << std::endl;  
         return_vector.push_back(test);
     }   
-   
     return return_vector;
-
 }
 
+*/
 
-      //Specialisation of the set_payload template for vector<int> not natively supported by msgpack
-std::vector<msgpack::type::variant> Fem2ControlMsg::to_variant_vect(std::vector<uint8_t> const& the_vector){
+//converts a u8 vector into a vector - variant.
+std::vector<msgpack::type::variant> Fem2ControlMsg::u8_to_variant_vect(std::vector<uint8_t> const& the_vector){
 
     // iterate over integer vector and create a variant
     std::vector<msgpack::type::variant> temp;
 
     for (auto i = the_vector.begin(); i != the_vector.end(); i++ ) {
-        uint8_t test = *i;
+        uint8_t test = static_cast<uint8_t>(*i);
         temp.push_back(test);
     }   
     return temp;

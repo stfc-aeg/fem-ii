@@ -46,13 +46,6 @@ struct I2C_READ{
     int i2c_register;
     Femii::DataWidth data_width;
     std::vector<uint8_t> the_data;
-    int data_length;
-
-    void set_length(){
-
-        this->data_length = this->the_data.size();
-
-    }
 
     std::string print(){
         std::string output = "";
@@ -60,6 +53,10 @@ struct I2C_READ{
         output += "    I2C Slave Address : " + std::to_string(this->slave_address) + ",\n";
         output += "    I2C Register : " + std::to_string(this->i2c_register) + ",\n";
         output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
+        output += "    The Data : ";
+        for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
+            output += std::to_string(*i) + ", ";
+        }   
         return output;
     }
 
