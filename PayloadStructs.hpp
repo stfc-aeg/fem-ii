@@ -1,3 +1,8 @@
+/*
+
+OLD CODE
+
+
 #ifndef PAYLOADSTRUCTS_H_
 #define PAYLOADSTRUCTS_H_
 
@@ -66,12 +71,12 @@ struct I2C_READ{
         equal += (lefthand_read.slave_address == righthand_read.slave_address);
         equal += (lefthand_read.i2c_register == righthand_read.i2c_register);
         equal += (lefthand_read.data_width == righthand_read.data_width);
-        equal += (lefthand_read.data_length == righthand_read.data_length);
         equal += (lefthand_read.the_data == righthand_read.the_data);
         //the_data equality.
         return equal;
     }
 };
+
 
 
 
@@ -160,3 +165,5 @@ struct QSPI_CONFIGP{
 
 };
 #endif
+
+*/

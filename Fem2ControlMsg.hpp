@@ -9,7 +9,8 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include <msgpack.hpp>
 #include "boost/bimap.hpp"
-#include "PayloadStructs.hpp"
+//#include "PayloadStructs.hpp"
+#include "PayloadClasses.hpp"
 
 
 #ifndef _WIN32
@@ -208,7 +209,7 @@ public:
     }
 
    //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(I2C_READ const& the_payload){
+    template<typename E> void set_payload(I2C_RW const& the_payload){
          
        // iterate over integer vector and create a variant
         std::vector<msgpack::type::variant> i2c_read_vect;
@@ -217,12 +218,13 @@ public:
         i2c_read_vect.push_back(the_payload.slave_address);
         i2c_read_vect.push_back(the_payload.i2c_register);
         i2c_read_vect.push_back(static_cast<int>(the_payload.data_width));
+    //guard for no data
 
         for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
         {
             i2c_read_vect.push_back(*i);
         }
-        std::cout << "set length: " << std::to_string(the_payload.data_length) << std::endl;
+        //std::cout << "set length: " << std::to_string(the_payload.data_length) << std::endl;
         this->payload = i2c_read_vect;
         //initialise the data length 
         this->data_length_ = the_payload.the_data.size();
@@ -274,7 +276,7 @@ public:
         if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_I2C){
 
             std::cout << "getting i2c payload" << std::endl;
-            I2C_READ i2c_payload;
+            I2C_RW i2c_payload;
             i2c_payload.i2c_bus = this->get_payload_at<int>(0);
             i2c_payload.slave_address = this->get_payload_at<int>(1);
             i2c_payload.i2c_register = this->get_payload_at<int>(2);
@@ -282,7 +284,7 @@ public:
             
             offset = 4;
             //std::cout << "get length: " << std::to_string(this->data_length_) << std::endl;
-            
+            // guard for read sends 
             for(int i=offset; i < (this->data_length_ + offset); i++){
                 //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                 i2c_payload.the_data.push_back(this->get_payload_at<int>(i));

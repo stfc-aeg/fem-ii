@@ -232,7 +232,7 @@ std::string Fem2ControlMsg::print(){
 
     // test by type of message -> 
     if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_I2C){
-        I2C_READ printout = this->get_payload<I2C_READ>(); // object creation - deletion fix
+        I2C_RW printout = this->get_payload<I2C_RW>(); // object creation - deletion fix
         output += printout.print();
     }
     else{

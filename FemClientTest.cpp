@@ -85,13 +85,13 @@ int main(){
         this_data.push_back(i);
     }
     
-    I2C_READ the_read;
+    I2C_RW the_read;
     the_read.i2c_bus = 1;
     the_read.slave_address = 2;
     the_read.i2c_register = 3;
     the_read.data_width = WIDTH_BYTE;
     the_read.the_data = this_data;
-    request.set_payload<I2C_READ>(the_read);
+    request.set_payload<I2C_RW>(the_read);
 
     // ----- check the type of the payload --//
     printf("payload is a %s \n", request.get_payload_type().c_str());
@@ -123,8 +123,8 @@ int main(){
 
     printf("payload is a %s \n", reply.get_payload_type().c_str());
 
-    I2C_READ the_read_back = reply.get_payload<I2C_READ>();
-    
+    I2C_RW the_read_back = reply.get_payload<I2C_RW>();
+
     //assert encoded/decoded round trip msgs are the same thing
     assert(request == reply);
     assert(the_read == the_read_back);
