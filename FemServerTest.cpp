@@ -3,6 +3,8 @@
 #include "Fem2ControlMsg.hpp"
 #include <cassert>
 #include "MsgPackEncoder.hpp"
+
+
 /*
 Mock Fem Server - uses ZMQ and MsgPack encoding to receive and send a single
 Fem2ControlMsg in a req-reply synchronous loop.
@@ -58,26 +60,27 @@ int main(){
 
     socket_.bind("tcp://*:5555");
     printf("server Booted \n");
-
     //   create a msgpack encoder
     MsgPackEncoder encoder;
 
-    // receive request
-    std::string encoded_request = receive();
 
-    //print request
-    print_as_python_bytes(encoded_request);
+    for(int x = 0; x < 7; x++){
 
-    //  decode the message into a fem2controlmsg using encoder
-    Fem2ControlMsg decoded_request = encoder.decode(encoded_request);
+        // receive request
+        std::string encoded_request = receive();
+        //print request
+        print_as_python_bytes(encoded_request);
 
-    std::cout << decoded_request.get_posix_timestamp() << std::endl;
-    std::cout << decoded_request.get_string_timestamp() << std::endl;
+        //  decode the message into a fem2controlmsg using encoder
+        Fem2ControlMsg decoded_request = encoder.decode(encoded_request);
 
-    //encode the fem2controlmsg reply 
-    std::string encoded_reply = encoder.encode(decoded_request);
+        std::cout << decoded_request.get_posix_timestamp() << std::endl;
+        std::cout << decoded_request.get_string_timestamp() << std::endl;
 
-    // send the encoded reply via zmq for comparison
-    send(encoded_reply);
+        //encode the fem2controlmsg reply 
+        std::string encoded_reply = encoder.encode(decoded_request);
 
+        // send the encoded reply via zmq for comparison
+        send(encoded_reply);
+    }
 }

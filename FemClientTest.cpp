@@ -16,6 +16,7 @@ using namespace Femii;
 //  create a zmq context and request socket
 zmq::context_t context(1);
 zmq::socket_t socket_(context, ZMQ_REQ);
+MsgPackEncoder encoder; 
 
 //  prints the encoded content (buf) as python bytes
 void print_as_python_bytes(std::string const& buf)
@@ -54,83 +55,298 @@ std::string receive(){
     return request_string;
 }
 
+void test_gpio(std::vector<uint8_t> const& the_data){
+
+    printf("---------------------------\nTesting GPIO Round Trip...\n");
+
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_GPIO, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    GPIO_RW the_gpio; 
+    the_gpio.mem_address = 1234;
+    the_gpio.mem_register = 12;
+    the_gpio.data_width = WIDTH_BYTE;
+    the_gpio.the_data = the_data;
+    request.set_payload<GPIO_RW>(the_gpio);
+
+    printf("GPIO Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("GPIO Reply: \n");
+    std::cout << reply;
+
+    GPIO_RW the_gpio_back = reply.get_payload<GPIO_RW>();
+
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_gpio == the_gpio_back);
+    // double check the vector size + data length fields are the same
+    assert(the_gpio_back.the_data.size() == request.data_length_);
+    std::cout << "GPIO MATCH" << std::endl;
+}
+
+void test_xadc(std::vector<uint8_t> const& the_data){
+
+    printf("---------------------------\nTesting XADC Round Trip...\n");
+
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_XADC, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    XADC_RW the_xadc; 
+    the_xadc.mem_address = 1234;
+    the_xadc.mem_register = 12;
+    the_xadc.data_width = WIDTH_BYTE;
+    the_xadc.the_data = the_data;
+    request.set_payload<XADC_RW>(the_xadc);
+
+    printf("XADC Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("XADC Reply: \n");
+    std::cout << reply;
+
+    XADC_RW the_xadc_back = reply.get_payload<XADC_RW>();
+
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_xadc == the_xadc_back);
+    // double check the vector size + data length fields are the same
+    assert(the_xadc_back.the_data.size() == request.data_length_);
+    std::cout << "XADC MATCH" << std::endl;
+    
+}
+
+void test_rawreg(std::vector<uint8_t> const& the_data){
+
+    printf("---------------------------\nTesting RAWREG Round Trip...\n");
+
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_RAWREG, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    RAWREG_RW the_rreg; 
+    the_rreg.mem_address = 1234;
+    the_rreg.mem_register = 12;
+    the_rreg.data_width = WIDTH_BYTE;
+    the_rreg.the_data = the_data;
+    request.set_payload<RAWREG_RW>(the_rreg);
+
+    printf("RAWREG Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("RAWREG Reply: \n");
+    std::cout << reply;
+
+    RAWREG_RW the_rreg_back = reply.get_payload<RAWREG_RW>();
+
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_rreg == the_rreg_back);
+    // double check the vector size + data length fields are the same
+    assert(the_rreg_back.the_data.size() == request.data_length_);
+    std::cout << "RAWREG MATCH" << std::endl;
+    
+    
+}
+
+void test_i2c(std::vector<uint8_t> const& the_data){
+
+
+    printf("---------------------------\nTesting I2C Round Trip...\n");
+    
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    I2C_RW the_i2c;
+    the_i2c.i2c_bus = 1;
+    the_i2c.slave_address = 2;
+    the_i2c.i2c_register = 3;
+    the_i2c.data_width = WIDTH_BYTE;
+    the_i2c.the_data = the_data;
+    request.set_payload<I2C_RW>(the_i2c);
+
+    printf("I2C Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("I2C Reply: \n");
+    std::cout << reply;
+
+    I2C_RW the_i2c_back = reply.get_payload<I2C_RW>();
+
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_i2c == the_i2c_back);
+    // double check the vector size + data length fields are the same
+    assert(the_i2c_back.the_data.size() == request.data_length_);
+    std::cout << "I2C MATCH" << std::endl;
+    
+}
+
+void test_qdr(std::vector<uint8_t> const& the_data){
+
+    printf("---------------------------\nTesting QDR Round Trip...\n");
+    
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_QDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    QDR_RW the_qdr;
+    the_qdr.mem_address = 1;
+    the_qdr.page = 2;
+    the_qdr.offset = 3;
+    the_qdr.data_width = WIDTH_BYTE;
+    the_qdr.the_data = the_data;
+    request.set_payload<QDR_RW>(the_qdr);
+
+    printf("QDR Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("QDR Reply: \n");
+    std::cout << reply;
+
+    QDR_RW the_qdr_back = reply.get_payload<QDR_RW>();
+
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_qdr == the_qdr_back);
+    // double check the vector size + data length fields are the same
+    assert(the_qdr_back.the_data.size() == request.data_length_);
+    std::cout << "QDR MATCH" << std::endl;
+    
+}
+void test_ddr(std::vector<uint8_t> const& the_data){
+
+
+    printf("---------------------------\nTesting DDR Round Trip...\n");
+    
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    DDR_RW the_ddr;
+    the_ddr.mem_address = 1;
+    the_ddr.page = 2;
+    the_ddr.offset = 3;
+    the_ddr.data_width = WIDTH_BYTE;
+    the_ddr.the_data = the_data;
+    request.set_payload<DDR_RW>(the_ddr);
+
+    printf("DDR Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("DDR Reply: \n");
+    std::cout << reply;
+
+    DDR_RW the_ddr_back = reply.get_payload<DDR_RW>();
+
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_ddr == the_ddr_back);
+    // double check the vector size + data length fields are the same
+    assert(the_ddr_back.the_data.size() == request.data_length_);
+    std::cout << "DDR MATCH" << std::endl;
+    
+    
+}
+
+void test_qspi(std::vector<uint8_t> const& the_data){
+
+    printf("---------------------------\nTesting DDR Round Trip...\n");
+    
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_QSPI, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    QSPI_RW the_qspi;
+    the_qspi.mem_address = 1;
+    the_qspi.page = 2;
+    the_qspi.offset = 3;
+    the_qspi.data_width = WIDTH_BYTE;
+    the_qspi.the_data = the_data;
+    request.set_payload<QSPI_RW>(the_qspi);
+
+    printf("QSPI Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("QSPI Reply: \n");
+    std::cout << reply;
+
+    QSPI_RW the_qspi_back = reply.get_payload<QSPI_RW>();
+
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_qspi == the_qspi_back);
+    // double check the vector size + data length fields are the same
+    assert(the_qspi_back.the_data.size() == request.data_length_);
+    std::cout << "QSPI MATCH" << std::endl;
+  
+}
+
+
 int main(){
 
     socket_.connect("tcp://localhost:5555");
     printf("Client Booted \n");
 
-    //initialise a control msg with values.
-    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
-    
-    //--------------------payload setting testing--------------------//
-
-    //-------- set with vector<u8> -----//
-    std::vector<u8> us_vect_chars;
-    us_vect_chars.push_back('c');
-    us_vect_chars.push_back('h');
-    us_vect_chars.push_back('g');
-    request.set_payload<std::vector<u8> >(us_vect_chars); // vector char is ok but vector<u8> not.
-    
-    //-------- set with vector<int> -----//
-    std::vector<int> vect_int;
-    vect_int.push_back(0);
-    vect_int.push_back(1);
-    vect_int.push_back(2);
-    request.set_payload<std::vector<int> >(vect_int); // overloaded specialisation
-    
-    //------- set with I2C READ -------//
     std::vector<uint8_t> this_data;
     
     for(uint8_t i =0; i < 20; i++){
         this_data.push_back(i);
     }
+
+    test_gpio(this_data);
+    test_i2c(this_data);
+    test_xadc(this_data);
+    test_rawreg(this_data);
+    test_qdr(this_data);
+    test_ddr(this_data);
+    test_qspi(this_data);
+
+    return 0;
     
-    I2C_RW the_read;
-    the_read.i2c_bus = 1;
-    the_read.slave_address = 2;
-    the_read.i2c_register = 3;
-    the_read.data_width = WIDTH_BYTE;
-    the_read.the_data = this_data;
-    request.set_payload<I2C_RW>(the_read);
-
-    // ----- check the type of the payload --//
-    printf("payload is a %s \n", request.get_payload_type().c_str());
-
-    // print the request as a string
-    std::cout << request;
-
-    //---------------- sending and receiving zmq ------------------------//
-
-    //  create a msgpack encoder
-    MsgPackEncoder encoder;    
-
-    //  encode the fem2controlmsg as a string (byte string)
-    std::string encoded_request = encoder.encode(request);
-
-     //print encoded request 
-    print_as_python_bytes(encoded_request);
-
-    //  send the encoded request via zmq
-    send(encoded_request);
-
-    //receive reply from server via zmq
-    std::string encoded_reply = receive();
-
-    // decode the response using the encoder
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
-
-    //---------------payload testing-------------------------//
-
-    printf("payload is a %s \n", reply.get_payload_type().c_str());
-
-    I2C_RW the_read_back = reply.get_payload<I2C_RW>();
-
-    //assert encoded/decoded round trip msgs are the same thing
-    assert(request == reply);
-    assert(the_read == the_read_back);
-    assert(the_read_back.the_data.size() == reply.data_length_);
-    std::cout << "MATCH" << std::endl;
-
-    //print the fem2controlmsg as a string.
-    std::cout << reply;
 }

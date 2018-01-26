@@ -58,40 +58,7 @@ class PayloadRW : public Payload{
         virtual ~PayloadRW(){};
 };
 
-class MEM_RW : public PayloadRW{
 
-    public:
-        int mem_address;
-        int page;
-        int offset;
-        MEM_RW(){};
-
-        std::string print(){
-
-            std::string output = "";
-            output += "    Memory Address : " + std::to_string(this->mem_address) + ",\n";
-            output += "    Memory Page : " + std::to_string(this->page) + ",\n";
-            output += "    Memory Address Offset : " + std::to_string(this->offset) + ",\n";            
-            output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
-            output += "    The Data : ";
-
-            for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                output += std::to_string(*i) + ", ";
-            }   
-            return output;
-        }
-
-        friend bool operator == (MEM_RW const& lefthand_payload, MEM_RW const& righthand_payload){
-            bool equal = true;
-            equal += (lefthand_payload.mem_address == righthand_payload.mem_address);
-            equal += (lefthand_payload.page == righthand_payload.page);
-            equal += (lefthand_payload.offset == righthand_payload.offset);
-            equal += (lefthand_payload.data_width == righthand_payload.data_width);
-            equal += (lefthand_payload.the_data == righthand_payload.the_data);
-            //the_data equality.
-            return equal;            
-        };
-};
 
 class I2C_RW : public PayloadRW{
 
@@ -130,106 +97,123 @@ class I2C_RW : public PayloadRW{
 
 };
 
-class GPIO_RW : public PayloadRW{
+class MEM_RW : public PayloadRW{
 
     public:
         int mem_address;
+        int page;
+        int offset;
+        MEM_RW(){};
+
+        std::string print(){
+
+            std::string output = "";
+            output += "    Memory Address : " + std::to_string(this->mem_address) + ",\n";
+            output += "    Memory Page : " + std::to_string(this->page) + ",\n";
+            output += "    Memory Address Offset : " + std::to_string(this->offset) + ",\n";            
+            output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
+            output += "    The Data : ";
+
+            for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
+                output += std::to_string(*i) + ", ";
+            }   
+            return output;
+        }
+
+        friend bool operator == (MEM_RW const& lefthand_payload, MEM_RW const& righthand_payload){
+            bool equal = true;
+            equal += (lefthand_payload.mem_address == righthand_payload.mem_address);
+            equal += (lefthand_payload.page == righthand_payload.page);
+            equal += (lefthand_payload.offset == righthand_payload.offset);
+            equal += (lefthand_payload.data_width == righthand_payload.data_width);
+            equal += (lefthand_payload.the_data == righthand_payload.the_data);
+            //the_data equality.
+            return equal;            
+        };
+};
+
+
+class QDR_RW : public MEM_RW{
+
+    public:
+ 
+        QDR_RW(){};
+       
+};
+
+class QSPI_RW : public MEM_RW{
+
+    public:
+ 
+        QSPI_RW(){};
+       
+};
+
+class DDR_RW : public MEM_RW{
+
+    public:
+ 
+        DDR_RW(){};
+       
+};
+
+
+class Basic_RW : public PayloadRW{
+
+    public: 
+        std::vector<uint8_t> the_data;
+        int mem_address;
         int mem_register;
+        Basic_RW(){};
+
+        std::string print(){
+
+            std::string output = "";
+            output += "    Memory Address : " + std::to_string(this->mem_address) + ",\n";
+            output += "    Memory Register : " + std::to_string(this->mem_register) + ",\n";
+            output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
+            output += "    The Data : ";
+
+            for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
+                output += std::to_string(*i) + ", ";
+            }   
+
+            return output;
+        }
+
+        friend bool operator == (Basic_RW const& lefthand_payload, Basic_RW const& righthand_payload){
+            bool equal = true;
+            equal += (lefthand_payload.mem_address == righthand_payload.mem_address);
+            equal += (lefthand_payload.mem_register == righthand_payload.mem_register);
+            equal += (lefthand_payload.data_width == righthand_payload.data_width);
+            equal += (lefthand_payload.the_data == righthand_payload.the_data);
+            //the_data equality.
+            return equal;
+        };
+
+};
+
+class GPIO_RW : public Basic_RW{
+
+    public:
+ 
         GPIO_RW(){};
-
-        std::string print(){
-
-            std::string output = "";
-            output += "    Memory Address : " + std::to_string(this->mem_address) + ",\n";
-            output += "    Memory Register : " + std::to_string(this->mem_register) + ",\n";
-            output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
-            output += "    The Data : ";
-
-            for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                output += std::to_string(*i) + ", ";
-            }   
-
-            return output;
-        }
-
-        friend bool operator == (GPIO_RW const& lefthand_payload, GPIO_RW const& righthand_payload){
-            bool equal = true;
-            equal += (lefthand_payload.mem_address == righthand_payload.mem_address);
-            equal += (lefthand_payload.mem_register == righthand_payload.mem_register);
-            equal += (lefthand_payload.data_width == righthand_payload.data_width);
-            equal += (lefthand_payload.the_data == righthand_payload.the_data);
-            //the_data equality.
-            return equal;
-        };
-
+       
 };
 
-class XADC_RW : public PayloadRW{
+class XADC_RW : public Basic_RW{
 
     public:
-        int mem_address;
-        int mem_register;
+
         XADC_RW(){};
-
-        std::string print(){
-        
-            std::string output = "";
-            output += "    Memory Address : " + std::to_string(this->mem_address) + ",\n";
-            output += "    Memory Register : " + std::to_string(this->mem_register) + ",\n";
-            output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
-            output += "    The Data : ";
-
-            for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                output += std::to_string(*i) + ", ";
-            }   
-
-            return output;
-        }
-
-        friend bool operator == (XADC_RW const& lefthand_payload, XADC_RW const& righthand_payload){
-            bool equal = true;
-            equal += (lefthand_payload.mem_address == righthand_payload.mem_address);
-            equal += (lefthand_payload.mem_register == righthand_payload.mem_register);
-            equal += (lefthand_payload.data_width == righthand_payload.data_width);
-            equal += (lefthand_payload.the_data == righthand_payload.the_data);
-            //the_data equality.
-            return equal;
-        };
-
+ 
 };
 
-class RAWREG_RW : public PayloadRW{
+class RAWREG_RW : public Basic_RW{
 
     public:
-        int mem_address;
-        int mem_register;
+
         RAWREG_RW(){};
-
-        std::string print(){
-        
-            std::string output = "";
-            output += "    Memory Address : " + std::to_string(this->mem_address) + ",\n";
-            output += "    Memory Register : " + std::to_string(this->mem_register) + ",\n";
-            output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
-            output += "    The Data : ";
-
-            for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                output += std::to_string(*i) + ", ";
-            }   
-
-            return output;
-        }
-
-        friend bool operator == (RAWREG_RW const& lefthand_payload, RAWREG_RW const& righthand_payload){
-            bool equal = true;
-            equal += (lefthand_payload.mem_address == righthand_payload.mem_address);
-            equal += (lefthand_payload.mem_register == righthand_payload.mem_register);
-            equal += (lefthand_payload.data_width == righthand_payload.data_width);
-            equal += (lefthand_payload.the_data == righthand_payload.the_data);
-            //the_data equality.
-            return equal;
-        };
-
 };
 
 

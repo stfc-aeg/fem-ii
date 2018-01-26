@@ -200,32 +200,69 @@ public:
             throw Fem2ControlMsgException("Payload has not been initialised");
         } 
     }
-
-    //Sets the payload to the_payload
-    // TODO - checks of prior initialisation
-    template <typename T> void set_payload(T const& the_payload)
-    {
-        this->payload = the_payload;
-    }
+    //template <typename T> void set_payload(T const& the_payload);
 
    //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
     template<typename E> void set_payload(I2C_RW const& the_payload){
          
        // iterate over integer vector and create a variant
-        std::vector<msgpack::type::variant> i2c_read_vect;
+        std::vector<msgpack::type::variant> i2c_rw_vect;
 
-        i2c_read_vect.push_back(the_payload.i2c_bus);
-        i2c_read_vect.push_back(the_payload.slave_address);
-        i2c_read_vect.push_back(the_payload.i2c_register);
-        i2c_read_vect.push_back(static_cast<int>(the_payload.data_width));
-    //guard for no data
-
+        i2c_rw_vect.push_back(the_payload.i2c_bus);
+        i2c_rw_vect.push_back(the_payload.slave_address);
+        i2c_rw_vect.push_back(the_payload.i2c_register);
+        i2c_rw_vect.push_back(static_cast<int>(the_payload.data_width));
+        
+        //guard for no data
         for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
         {
-            i2c_read_vect.push_back(*i);
+            i2c_rw_vect.push_back(*i);
         }
-        //std::cout << "set length: " << std::to_string(the_payload.data_length) << std::endl;
-        this->payload = i2c_read_vect;
+
+        this->payload = i2c_rw_vect;
+        //initialise the data length 
+        this->data_length_ = the_payload.the_data.size();
+    }
+  
+
+       //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
+    template<typename E> void set_payload(MEM_RW const& the_payload){
+         
+       // iterate over integer vector and create a variant
+        std::vector<msgpack::type::variant> mem_rw_vect;
+
+        mem_rw_vect.push_back(the_payload.mem_address);
+        mem_rw_vect.push_back(the_payload.page);
+        mem_rw_vect.push_back(the_payload.offset);
+        mem_rw_vect.push_back(static_cast<int>(the_payload.data_width));
+        
+        //guard for no data
+        for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
+        {
+            mem_rw_vect.push_back(*i);
+        }
+        this->payload = mem_rw_vect;
+        //initialise the data length 
+        this->data_length_ = the_payload.the_data.size();
+    }
+
+    //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
+    template<typename E> void set_payload(Basic_RW const& the_payload){
+
+       // iterate over integer vector and create a variant
+        std::vector<msgpack::type::variant> payload_rw_vect;
+
+        payload_rw_vect.push_back(the_payload.mem_address);
+        payload_rw_vect.push_back(the_payload.mem_register);
+        payload_rw_vect.push_back(static_cast<int>(the_payload.data_width));
+        
+        //guard for no data
+        for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
+        {
+            payload_rw_vect.push_back(*i);
+        }
+
+        this->payload = payload_rw_vect;
         //initialise the data length 
         this->data_length_ = the_payload.the_data.size();
     }
@@ -253,6 +290,7 @@ public:
         }   
         this->payload = temp;
     }
+  
 
     //  Overloaded outstream operator
     friend std::ostream& operator <<(std::ostream& os, Fem2ControlMsg& control_message);
@@ -270,33 +308,7 @@ public:
     std::string get_payload_type();
 
     // returns a struct corresponding to the type of msg.
-    template <typename T> T get_payload(){
-
-        int offset; // offset for start of the data
-        if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_I2C){
-
-            std::cout << "getting i2c payload" << std::endl;
-            I2C_RW i2c_payload;
-            i2c_payload.i2c_bus = this->get_payload_at<int>(0);
-            i2c_payload.slave_address = this->get_payload_at<int>(1);
-            i2c_payload.i2c_register = this->get_payload_at<int>(2);
-            i2c_payload.data_width = this->get_payload_at<DataWidth>(3);
-            
-            offset = 4;
-            //std::cout << "get length: " << std::to_string(this->data_length_) << std::endl;
-            // guard for read sends 
-            for(int i=offset; i < (this->data_length_ + offset); i++){
-                //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-                i2c_payload.the_data.push_back(this->get_payload_at<int>(i));
-            }
-            
-            return i2c_payload; 
-        }
-        // if config messages -> map style 
-        else{
-            throw Fem2ControlMsgException("Unknown Payload Type");
-        }
-    }
+    template <typename T> T get_payload();
 
     //To be used in getting data values in vector payloads
     template <typename T> T get_payload_at(int const& index)
@@ -314,7 +326,6 @@ public:
 
     //to be used in getting data values in vector payloads
     template <typename T> T get_value(msgpack::type::variant const& value);
-   // template <typename T> T get_value(msgpack::type::variant value);
 
     int data_length_; // length of the data being sent
 
