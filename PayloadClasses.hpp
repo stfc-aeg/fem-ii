@@ -63,9 +63,9 @@ class PayloadRW : public Payload{
 class I2C_RW : public PayloadRW{
 
     public:
-        int i2c_bus;
-        int slave_address;
-        int i2c_register;
+        uint32_t i2c_bus;
+        uint32_t slave_address;
+        uint32_t i2c_register;
         I2C_RW(){};
 
         std::string print(){
@@ -75,12 +75,13 @@ class I2C_RW : public PayloadRW{
             output += "    I2C Slave Address : " + std::to_string(this->slave_address) + ",\n";
             output += "    I2C Register : " + std::to_string(this->i2c_register) + ",\n";
             output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
-            output += "    The Data : ";
-
-            for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                output += std::to_string(*i) + ", ";
-            }   
-
+            if (! this->the_data.empty())
+            {
+                output += "    The Data : ";
+                for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
+                    output += std::to_string(*i) + ", ";
+                }   
+            }
             return output;
         };
 
@@ -100,9 +101,9 @@ class I2C_RW : public PayloadRW{
 class MEM_RW : public PayloadRW{
 
     public:
-        int mem_address;
-        int page;
-        int offset;
+        uint32_t mem_address;
+        uint32_t page;
+        uint32_t offset;
         MEM_RW(){};
 
         std::string print(){
@@ -112,10 +113,12 @@ class MEM_RW : public PayloadRW{
             output += "    Memory Page : " + std::to_string(this->page) + ",\n";
             output += "    Memory Address Offset : " + std::to_string(this->offset) + ",\n";            
             output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
-            output += "    The Data : ";
-
-            for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                output += std::to_string(*i) + ", ";
+            if (! this->the_data.empty()) //if there's no data don't print it
+            {
+                output += "    The Data : ";
+                for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
+                    output += std::to_string(*i) + ", ";
+                }
             }   
             return output;
         }
@@ -162,8 +165,8 @@ class Basic_RW : public PayloadRW{
 
     public: 
         std::vector<uint8_t> the_data;
-        int mem_address;
-        int mem_register;
+        uint32_t mem_address;
+        uint32_t mem_register;
         Basic_RW(){};
 
         std::string print(){
@@ -172,12 +175,14 @@ class Basic_RW : public PayloadRW{
             output += "    Memory Address : " + std::to_string(this->mem_address) + ",\n";
             output += "    Memory Register : " + std::to_string(this->mem_register) + ",\n";
             output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
-            output += "    The Data : ";
-
-            for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                output += std::to_string(*i) + ", ";
-            }   
-
+            
+            if (! this->the_data.empty()) //if there's no data don't print it
+            { 
+                output += "    The Data : ";
+                for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
+                    output += std::to_string(*i) + ", ";
+                }   
+            }
             return output;
         }
 

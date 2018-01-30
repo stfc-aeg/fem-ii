@@ -199,11 +199,12 @@ template <> I2C_RW Fem2ControlMsg::get_payload(){
         i2c_payload.data_width = this->get_payload_at<DataWidth>(3);
             
         offset = 4;
-        //std::cout << "get length: " << std::to_string(this->data_length_) << std::endl;
-        /// guard for read sends 
-        for(int i=offset; i < (this->data_length_ + offset); i++){
-            //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-            i2c_payload.the_data.push_back(this->get_payload_at<int>(i));
+        if(!(this->data_length_ == 0))
+        {
+            for(int i=offset; i < (this->data_length_ + offset); i++){
+                //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
+                i2c_payload.the_data.push_back(this->get_payload_at<int>(i));
+            }
         }
         return i2c_payload; 
     }
@@ -224,11 +225,13 @@ template <> DDR_RW Fem2ControlMsg::get_payload(){
         ddr_payload.data_width = this->get_payload_at<DataWidth>(3);
             
         offset = 4;
-        //std::cout << "get length: " << std::to_string(this->data_length_) << std::endl;
-        /// guard for read sends 
-        for(int i=offset; i < (this->data_length_ + offset); i++){
-            //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-            ddr_payload.the_data.push_back(this->get_payload_at<int>(i));
+        if(!(this->data_length_ == 0))
+        {
+            /// guard for read sends 
+            for(int i=offset; i < (this->data_length_ + offset); i++){
+                //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
+                ddr_payload.the_data.push_back(this->get_payload_at<int>(i));
+            }
         }
         return ddr_payload; 
     }
@@ -249,11 +252,12 @@ template <> QDR_RW Fem2ControlMsg::get_payload(){
         qdr_payload.data_width = this->get_payload_at<DataWidth>(3);
             
         offset = 4;
-        //std::cout << "get length: " << std::to_string(this->data_length_) << std::endl;
-        /// guard for read sends 
-        for(int i=offset; i < (this->data_length_ + offset); i++){
-            //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-            qdr_payload.the_data.push_back(this->get_payload_at<int>(i));
+        if(!(this->data_length_ == 0))
+        {
+            for(int i=offset; i < (this->data_length_ + offset); i++){
+                //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
+                qdr_payload.the_data.push_back(this->get_payload_at<int>(i));
+            }
         }
         return qdr_payload; 
     }
@@ -274,11 +278,12 @@ template <> QSPI_RW Fem2ControlMsg::get_payload(){
         qspi_payload.data_width = this->get_payload_at<DataWidth>(3);
             
         offset = 4;
-        //std::cout << "get length: " << std::to_string(this->data_length_) << std::endl;
-        /// guard for read sends 
-        for(int i=offset; i < (this->data_length_ + offset); i++){
-            //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-            qspi_payload.the_data.push_back(this->get_payload_at<int>(i));
+        if(!(this->data_length_ == 0))
+        {
+            for(int i=offset; i < (this->data_length_ + offset); i++){
+                //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
+                qspi_payload.the_data.push_back(this->get_payload_at<int>(i));
+            }
         }
         return qspi_payload; 
     }
@@ -298,10 +303,12 @@ template <> GPIO_RW Fem2ControlMsg::get_payload(){
         gpio_payload.data_width = this->get_payload_at<DataWidth>(2);
             
         offset = 3;
-        // guard for read sends 
-        for(int i=offset; i < (this->data_length_ + offset); i++){
-            //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-            gpio_payload.the_data.push_back(this->get_payload_at<int>(i));
+        if(!(this->data_length_ == 0))
+        {
+            for(int i=offset; i < (this->data_length_ + offset); i++){
+                //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
+                gpio_payload.the_data.push_back(this->get_payload_at<int>(i));
+            }
         }   
         return gpio_payload; 
     }
@@ -320,10 +327,12 @@ template <> XADC_RW Fem2ControlMsg::get_payload(){
         xadc_payload.data_width = this->get_payload_at<DataWidth>(2);
             
         offset = 3;
-        // guard for read sends 
-        for(int i=offset; i < (this->data_length_ + offset); i++){
-            //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-            xadc_payload.the_data.push_back(this->get_payload_at<int>(i));
+        if(!(this->data_length_ == 0))
+        {
+            for(int i=offset; i < (this->data_length_ + offset); i++){
+                //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
+                xadc_payload.the_data.push_back(this->get_payload_at<int>(i));
+            }
         }   
         return xadc_payload; 
     }
@@ -343,10 +352,12 @@ template <> RAWREG_RW Fem2ControlMsg::get_payload(){
         rreg_payload.data_width = this->get_payload_at<DataWidth>(2);
             
         offset = 3;
-        // guard for read sends 
-        for(int i=offset; i < (this->data_length_ + offset); i++){
-            //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-            rreg_payload.the_data.push_back(this->get_payload_at<int>(i));
+        if(!(this->data_length_ == 0))
+        {
+            for(int i=offset; i < (this->data_length_ + offset); i++){
+                //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
+                rreg_payload.the_data.push_back(this->get_payload_at<int>(i));
+            }
         }   
         return rreg_payload; 
     }

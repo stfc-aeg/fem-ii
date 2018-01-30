@@ -213,15 +213,17 @@ public:
         i2c_rw_vect.push_back(the_payload.i2c_register);
         i2c_rw_vect.push_back(static_cast<int>(the_payload.data_width));
         
-        //guard for no data
-        for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
+        if (! the_payload.the_data.empty()) //if the data hasn't been populated we don't send the vector.
         {
-            i2c_rw_vect.push_back(*i);
-        }
-
+            for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
+            {
+                i2c_rw_vect.push_back(*i);
+            }
+        } 
         this->payload = i2c_rw_vect;
         //initialise the data length 
         this->data_length_ = the_payload.the_data.size();
+      
     }
   
 
@@ -236,11 +238,15 @@ public:
         mem_rw_vect.push_back(the_payload.offset);
         mem_rw_vect.push_back(static_cast<int>(the_payload.data_width));
         
-        //guard for no data
-        for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
+        if (! the_payload.the_data.empty()) //if the data hasn't been populated we don't send the vector.
         {
-            mem_rw_vect.push_back(*i);
+            //guard for no data
+            for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
+            {
+                mem_rw_vect.push_back(*i);
+            }
         }
+
         this->payload = mem_rw_vect;
         //initialise the data length 
         this->data_length_ = the_payload.the_data.size();
@@ -256,12 +262,13 @@ public:
         payload_rw_vect.push_back(the_payload.mem_register);
         payload_rw_vect.push_back(static_cast<int>(the_payload.data_width));
         
-        //guard for no data
-        for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
+        if (! the_payload.the_data.empty()) //if the data hasn't been populated we don't send the vector.
         {
-            payload_rw_vect.push_back(*i);
+            for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
+            {
+                payload_rw_vect.push_back(*i);
+            }
         }
-
         this->payload = payload_rw_vect;
         //initialise the data length 
         this->data_length_ = the_payload.the_data.size();

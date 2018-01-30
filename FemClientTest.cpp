@@ -256,11 +256,11 @@ void test_ddr(std::vector<uint8_t> const& the_data){
     Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
     
     DDR_RW the_ddr;
-    the_ddr.mem_address = 1;
-    the_ddr.page = 2;
-    the_ddr.offset = 3;
+    the_ddr.mem_address = 0x80000000; //DDR base address
+    the_ddr.page = 0;
+    the_ddr.offset = 0x00000000;        //DDR offset address
     the_ddr.data_width = WIDTH_BYTE;
-    the_ddr.the_data = the_data;
+    //the_ddr.the_data = the_data;
     request.set_payload<DDR_RW>(the_ddr);
 
     printf("DDR Request: \n");
@@ -282,15 +282,14 @@ void test_ddr(std::vector<uint8_t> const& the_data){
     assert(request == reply);
     assert(the_ddr == the_ddr_back);
     // double check the vector size + data length fields are the same
-    assert(the_ddr_back.the_data.size() == request.data_length_);
+    assert(the_ddr_back.the_data.size() == reply.data_length_);
     std::cout << "DDR MATCH" << std::endl;
-    
     
 }
 
 void test_qspi(std::vector<uint8_t> const& the_data){
 
-    printf("---------------------------\nTesting DDR Round Trip...\n");
+    printf("---------------------------\nTesting QSPI Round Trip...\n");
     
     //initialise a control msg with values.
     Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_QSPI, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
@@ -330,7 +329,7 @@ void test_qspi(std::vector<uint8_t> const& the_data){
 
 int main(){
 
-    socket_.connect("tcp://localhost:5555");
+    socket_.connect("tcp://192.168.0.122:5555");
     printf("Client Booted \n");
 
     std::vector<uint8_t> this_data;
