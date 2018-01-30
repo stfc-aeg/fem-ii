@@ -3,7 +3,7 @@
 #include "Fem2ControlMsg.hpp"
 #include <cassert>
 #include "MsgPackEncoder.hpp"
-
+#include "mem_reader.hpp"
 
 /*
 Mock Fem Server - uses ZMQ and MsgPack encoding to receive and send a single
@@ -55,13 +55,13 @@ std::string receive()
     return request_string;
 }
 
-
 int main(){
 
     socket_.bind("tcp://*:5555");
     printf("server Booted \n");
     //   create a msgpack encoder
     MsgPackEncoder encoder;
+    
 
 
     for(int x = 0; x < 7; x++){
@@ -73,6 +73,22 @@ int main(){
 
         //  decode the message into a fem2controlmsg using encoder
         Fem2ControlMsg decoded_request = encoder.decode(encoded_request);
+
+
+        if(decoded_request.get_access_type() == Femii::Fem2ControlMsg::ACCESS_DDR){
+            
+            DDR_RW ddr_req = decoded_request.get_payload<DDR_RW>();
+            mem_reader memory_reader(ddr_req.mem_address, ddr_req.offset, ddr_req.data_width);
+
+            if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_READ){
+            
+                memory_reader.init_mmap();
+                unsigned long result = memory_reader.read_mem();
+                std::cout << "mem result: " << std::to_string(result) << std::endl;
+                memory_reader.unmap();
+
+            }
+        }
 
         std::cout << decoded_request.get_posix_timestamp() << std::endl;
         std::cout << decoded_request.get_string_timestamp() << std::endl;

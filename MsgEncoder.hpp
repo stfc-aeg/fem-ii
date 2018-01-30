@@ -25,7 +25,7 @@ public:
     virtual const std::string encode(Fem2ControlMsg the_msg) = 0;
 
     virtual const Fem2ControlMsg decode(std::string the_msg) = 0;
-
+    
 };
 
 /* 
