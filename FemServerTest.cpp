@@ -64,7 +64,7 @@ int main(){
     
 
 
-    for(int x = 0; x < 8; x++){
+    for(int x = 0; x < 7; x++){
 
         // receive request
         std::string encoded_request = receive();
@@ -73,8 +73,9 @@ int main(){
 
         //  decode the message into a fem2controlmsg using encoder
         Fem2ControlMsg decoded_request = encoder.decode(encoded_request);
+        std::string encoded_reply;
 
-        if (x % 7 == 0){
+        if (x % 6 == 0){
 
             if(decoded_request.get_access_type() == Femii::Fem2ControlMsg::ACCESS_DDR){
             
@@ -99,19 +100,16 @@ int main(){
                     ddr_reply.the_data.push_back(result);
                     reply.set_payload<DDR_RW>(ddr_reply);
                         //encode the fem2controlmsg reply 
-                    std::string encoded_reply = encoder.encode(reply);
-                    // send the encoded reply via zmq for comparison
-                    send(encoded_reply);  
-
+                    encoded_reply = encoder.encode(reply);
                 }
             }
                
         }
         else{
             //encode the fem2controlmsg reply 
-            std::string encoded_reply = encoder.encode(decoded_request);
+            encoded_reply = encoder.encode(decoded_request);
             // send the encoded reply via zmq for comparison
-            send(encoded_reply);
         }
+        send(encoded_reply);
     } //for loop
 }
