@@ -371,6 +371,7 @@ void test_ddr_read_femii(){
 int main(){
 
     socket_.connect("tcp://192.168.0.122:5555");
+    //socket_.connect("tcp://localhost:5555");
     printf("Client Booted \n");
 
     std::vector<uint8_t> this_data;

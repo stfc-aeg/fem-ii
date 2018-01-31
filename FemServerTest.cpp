@@ -106,6 +106,7 @@ int main(){
                
         }
         else{
+            std::cout << "not 6" << std::endl; 
             //encode the fem2controlmsg reply 
             encoded_reply = encoder.encode(decoded_request);
             // send the encoded reply via zmq for comparison
