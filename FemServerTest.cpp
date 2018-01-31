@@ -64,7 +64,7 @@ int main(){
     
 
 
-    for(int x = 0; x < 7; x++){
+    for(int x = 0; x < 8; x++){
 
         // receive request
         std::string encoded_request = receive();
@@ -74,29 +74,44 @@ int main(){
         //  decode the message into a fem2controlmsg using encoder
         Fem2ControlMsg decoded_request = encoder.decode(encoded_request);
 
+        if (x % 7 == 0){
 
-        if(decoded_request.get_access_type() == Femii::Fem2ControlMsg::ACCESS_DDR){
+            if(decoded_request.get_access_type() == Femii::Fem2ControlMsg::ACCESS_DDR){
             
-            DDR_RW ddr_req = decoded_request.get_payload<DDR_RW>();
-            mem_reader memory_reader(ddr_req.mem_address, ddr_req.offset, ddr_req.data_width);
+                DDR_RW ddr_req = decoded_request.get_payload<DDR_RW>();
+                mem_reader memory_reader(ddr_req.mem_address, ddr_req.offset, ddr_req.data_width);
 
-            if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_READ){
+                if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_READ){
             
-                memory_reader.init_mmap();
-                unsigned long result = memory_reader.read_mem();
-                std::cout << "mem result: " << std::to_string(result) << std::endl;
-                memory_reader.unmap();
+                    memory_reader.init_mmap();
+                    unsigned long result = memory_reader.read_mem();
+                    std::cout << "mem result: " << std::to_string(result) << std::endl;
+                    memory_reader.unmap();
 
+                    // form a new Fem2ControlMsg to send back. 
+
+                    Fem2ControlMsg reply(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                    DDR_RW ddr_reply;
+                    ddr_reply.mem_address = ddr_req.mem_address;
+                    ddr_reply.page = ddr_req.page;
+                    ddr_reply.offset = ddr_req.offset; 
+                    ddr_reply.data_width = ddr_req.data_width;
+                    ddr_reply.the_data.push_back(result);
+                    reply.set_payload<DDR_RW>(ddr_reply);
+                        //encode the fem2controlmsg reply 
+                    std::string encoded_reply = encoder.encode(reply);
+                    // send the encoded reply via zmq for comparison
+                    send(encoded_reply);  
+
+                }
             }
+               
         }
-
-        std::cout << decoded_request.get_posix_timestamp() << std::endl;
-        std::cout << decoded_request.get_string_timestamp() << std::endl;
-
-        //encode the fem2controlmsg reply 
-        std::string encoded_reply = encoder.encode(decoded_request);
-
-        // send the encoded reply via zmq for comparison
-        send(encoded_reply);
-    }
+        else{
+            //encode the fem2controlmsg reply 
+            std::string encoded_reply = encoder.encode(decoded_request);
+            // send the encoded reply via zmq for comparison
+            send(encoded_reply);
+        }
+    } //for loop
 }
