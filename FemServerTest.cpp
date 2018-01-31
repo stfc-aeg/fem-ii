@@ -97,14 +97,16 @@ int main(){
                     ddr_reply.data_width = ddr_req.data_width;
                     ddr_reply.the_data.push_back(result);
                     reply.set_payload<DDR_RW>(ddr_reply);
+                    std::cout<< ddr_reply.print() << std::endl;
+                    std::cout<< "data length: " << std::to_string(reply.data_length_) << std::endl;
                         //encode the fem2controlmsg reply 
                     encoded_reply = encoder.encode(reply);
             }
-        }    
-
-        std::cout << "not ddr" << std::endl; 
-        //encode the fem2controlmsg reply 
-        encoded_reply = encoder.encode(decoded_request);
+        }
+        else{    
+            //encode the fem2controlmsg reply 
+            encoded_reply = encoder.encode(decoded_request);
+        }
         // send the encoded reply via zmq for comparison
         send(encoded_reply);
     } //for loop
