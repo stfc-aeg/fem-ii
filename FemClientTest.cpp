@@ -337,7 +337,7 @@ void test_ddr_read_femii(){
     DDR_RW the_ddr;
     the_ddr.mem_address = 0x80000000; //DDR base address
     the_ddr.page = 0;
-    the_ddr.offset = 0x00000000;        //DDR offset address
+    the_ddr.offset = 0x00000001;        //DDR offset address
     the_ddr.data_width = WIDTH_BYTE;
     request.set_payload<DDR_RW>(the_ddr);
 
@@ -356,7 +356,47 @@ void test_ddr_read_femii(){
 
     DDR_RW the_ddr_back = reply.get_payload<DDR_RW>();
 
-    std::cout << the_ddr_back.print();
+    /*
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_ddr == the_ddr_back);
+    // double check the vector size + data length fields are the same
+    assert(the_ddr_back.the_data.size() == request.data_length_);
+    std::cout << "DDR MATCH" << std::endl;
+    */
+}
+
+void test_ddr_write_femii(){
+
+
+    printf("---------------------------\nTesting DDR Round Trip...\n");
+    
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    DDR_RW the_ddr;
+    the_ddr.mem_address = 0x80000000; //DDR base address
+    the_ddr.page = 0;
+    the_ddr.offset = 0x00000001;
+    the_ddr.the_data.push_back(0xFF);        //DDR offset address
+    the_ddr.data_width = WIDTH_BYTE;
+    request.set_payload<DDR_RW>(the_ddr);
+
+    printf("DDR Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("DDR Reply: \n");
+    std::cout << reply;
+
+    DDR_RW the_ddr_back = reply.get_payload<DDR_RW>();
+
     /*
     //assert encoded/decoded round trip msgs and payloads are the same thing
     assert(request == reply);
@@ -387,7 +427,9 @@ int main(){
     test_qdr(this_data);
     test_qspi(this_data);
     //test_ddr(this_data);
-    test_ddr_read_femii();
+
+    test_ddr_write_femii(); // writes 0xFF to 0x80000001
+    test_ddr_read_femii();  // reads 0xFF to 0x80000001??
 
     return 0;
     

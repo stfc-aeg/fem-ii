@@ -64,7 +64,7 @@ int main(){
     
 
 
-    for(int x = 0; x < 7; x++){
+    for(int x = 0; x < 8; x++){
 
         // receive request
         std::string encoded_request = receive();
@@ -79,29 +79,49 @@ int main(){
             
             DDR_RW ddr_req = decoded_request.get_payload<DDR_RW>();
             mem_reader memory_reader(ddr_req.mem_address, ddr_req.offset, ddr_req.data_width);
+            memory_reader.init_mmap();
 
-            if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_READ){
+            if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_WRITE){
+
+                // iterate over the data vector, writing memory untill data_length
+                // in this case we KNOW it's 1 byte, at the 1st index.
+                unsigned long result = memory_reader.write_mem(ddr_req.the_data.at(0));
+                Fem2ControlMsg write_reply(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                DDR_RW ddr_reply;
+                ddr_reply.mem_address = ddr_req.mem_address;
+                ddr_reply.page = ddr_req.page;
+                ddr_reply.offset = ddr_req.offset; 
+                ddr_reply.data_width = ddr_req.data_width;
+                ddr_reply.the_data.push_back(result);
+                write_reply.set_payload<DDR_RW>(ddr_reply);
+                std::cout<< ddr_reply.print() << std::endl;
+                std::cout<< "data length: " << std::to_string(write_reply.data_length_) << std::endl;
+                //encode the fem2controlmsg reply 
+                encoded_reply = encoder.encode(write_reply);
+
+            }
+            else if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_READ){
             
-                    memory_reader.init_mmap();
                     unsigned long result = memory_reader.read_mem();
                     std::cout << "mem result: " << std::to_string(result) << std::endl;
                     memory_reader.unmap();
 
                     // form a new Fem2ControlMsg to send back. 
 
-                    Fem2ControlMsg reply(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                    Fem2ControlMsg read_reply(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK, 0x1234, 10, 0);
                     DDR_RW ddr_reply;
                     ddr_reply.mem_address = ddr_req.mem_address;
                     ddr_reply.page = ddr_req.page;
                     ddr_reply.offset = ddr_req.offset; 
                     ddr_reply.data_width = ddr_req.data_width;
                     ddr_reply.the_data.push_back(result);
-                    reply.set_payload<DDR_RW>(ddr_reply);
+                    read_reply.set_payload<DDR_RW>(ddr_reply);
                     std::cout<< ddr_reply.print() << std::endl;
-                    std::cout<< "data length: " << std::to_string(reply.data_length_) << std::endl;
+                    std::cout<< "data length: " << std::to_string(read_reply.data_length_) << std::endl;
                         //encode the fem2controlmsg reply 
-                    encoded_reply = encoder.encode(reply);
+                    encoded_reply = encoder.encode(read_reply);
             }
+
         }
         else{    
             //encode the fem2controlmsg reply 

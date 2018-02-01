@@ -190,7 +190,7 @@ std::string Fem2ControlMsg::get_payload_type(){
 template <> I2C_RW Fem2ControlMsg::get_payload(){
 
     int offset; // offset for start of the data
-    if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_I2C){
+    if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_I2C){
 
         I2C_RW i2c_payload;
         i2c_payload.i2c_bus = this->get_payload_at<int>(0);
@@ -216,7 +216,7 @@ template <> I2C_RW Fem2ControlMsg::get_payload(){
 template <> DDR_RW Fem2ControlMsg::get_payload(){
 
     int offset; // offset for start of the data
-    if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_DDR){
+    if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_DDR){
 
         DDR_RW ddr_payload;
         ddr_payload.mem_address = this->get_payload_at<int>(0);
@@ -243,7 +243,7 @@ template <> DDR_RW Fem2ControlMsg::get_payload(){
 template <> QDR_RW Fem2ControlMsg::get_payload(){
 
     int offset; // offset for start of the data
-    if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_QDR){
+    if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_QDR){
 
         QDR_RW qdr_payload;
         qdr_payload.mem_address = this->get_payload_at<int>(0);
@@ -269,7 +269,7 @@ template <> QDR_RW Fem2ControlMsg::get_payload(){
 template <> QSPI_RW Fem2ControlMsg::get_payload(){
 
     int offset; // offset for start of the data
-    if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_QSPI){
+    if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_QSPI){
 
         QSPI_RW qspi_payload;
         qspi_payload.mem_address = this->get_payload_at<int>(0);
@@ -296,7 +296,7 @@ template <> QSPI_RW Fem2ControlMsg::get_payload(){
 template <> GPIO_RW Fem2ControlMsg::get_payload(){
 
     int offset; // offset for start of the data
-    if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_GPIO){
+    if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_GPIO){
         GPIO_RW gpio_payload;
         gpio_payload.mem_address = this->get_payload_at<int>(0);
         gpio_payload.mem_register = this->get_payload_at<int>(1);
@@ -320,7 +320,7 @@ template <> GPIO_RW Fem2ControlMsg::get_payload(){
 template <> XADC_RW Fem2ControlMsg::get_payload(){
 
     int offset; // offset for start of the data
-    if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_XADC){
+    if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_XADC){
         XADC_RW xadc_payload;
         xadc_payload.mem_address = this->get_payload_at<int>(0);
         xadc_payload.mem_register = this->get_payload_at<int>(1);
@@ -345,7 +345,7 @@ template <> XADC_RW Fem2ControlMsg::get_payload(){
 template <> RAWREG_RW Fem2ControlMsg::get_payload(){
 
     int offset; // offset for start of the data
-    if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_RAWREG){
+    if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_RAWREG){
         RAWREG_RW rreg_payload;
         rreg_payload.mem_address = this->get_payload_at<int>(0);
         rreg_payload.mem_register = this->get_payload_at<int>(1);
@@ -444,32 +444,32 @@ std::string Fem2ControlMsg::print(){
     output += "PAYLOAD : {\n";
     
     // test by type of message -> 
-    if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_I2C){
+    if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_I2C){
         I2C_RW printout = this->get_payload<I2C_RW>(); // object creation - deletion fix
         output += printout.print();
     }
     
-    else if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_GPIO){
+    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_GPIO){
         GPIO_RW printout = this->get_payload<GPIO_RW>(); // object creation - deletion fix
         output += printout.print();
     }
-    else if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_XADC){
+    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_XADC){
         XADC_RW printout = this->get_payload<XADC_RW>(); // object creation - deletion fix
         output += printout.print();
     }
-    else if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_RAWREG){
+    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_RAWREG){
         RAWREG_RW printout = this->get_payload<RAWREG_RW>(); // object creation - deletion fix
         output += printout.print();
     }
-    else if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_QDR){
+    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_QDR){
         QDR_RW printout = this->get_payload<QDR_RW>(); // object creation - deletion fix
         output += printout.print();
     }
-    else if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_DDR){
+    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_DDR){
         DDR_RW printout = this->get_payload<DDR_RW>(); // object creation - deletion fix
         output += printout.print();
     }
-    else if (this->get_cmd_type() == CMD_READ && this->get_access_type() == ACCESS_QSPI){
+    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE) && this->get_access_type() == ACCESS_QSPI){
         QSPI_RW printout = this->get_payload<QSPI_RW>(); // object creation - deletion fix
         output += printout.print();
     }
