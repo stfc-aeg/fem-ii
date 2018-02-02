@@ -83,9 +83,22 @@ int main(){
 
             if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_WRITE){
 
+
+                //GPIO page changing.
+                ddr_req.page;
+
+
+
+
+
+
+
+
+
                 // iterate over the data vector, writing memory untill data_length
                 // in this case we KNOW it's 1 byte, at the 1st index.
                 unsigned long result = memory_reader.write_mem(ddr_req.the_data.at(0));
+
                 Fem2ControlMsg write_reply(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK, 0x1234, 10, 0);
                 DDR_RW ddr_reply;
                 ddr_reply.mem_address = ddr_req.mem_address;
