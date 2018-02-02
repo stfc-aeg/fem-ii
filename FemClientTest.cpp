@@ -386,12 +386,12 @@ void test_ddr_readwrite_femii(){
     std::cout << write_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(write_request);
-    send(encoded_request);
+    std::string encoded_write_request = encoder.encode(write_request);
+    send(encoded_write_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
-    std::string encoded_reply = receive();
-    Fem2ControlMsg write_reply = encoder.decode(encoded_reply);
+    std::string encoded_write_reply = receive();
+    Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
     printf("DDR Reply: \n");
     std::cout << write_reply;
 
@@ -413,12 +413,12 @@ void test_ddr_readwrite_femii(){
     std::cout << read_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(read_request);
-    send(encoded_request);
+    std::string encoded_read_request = encoder.encode(read_request);
+    send(encoded_read_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
-    std::string encoded_reply = receive();
-    Fem2ControlMsg read_reply = encoder.decode(encoded_reply);
+    std::string encoded_read_reply = receive();
+    Fem2ControlMsg read_reply = encoder.decode(encoded_read_reply);
     printf("DDR Read Reply: \n");
     std::cout << read_reply;
 
