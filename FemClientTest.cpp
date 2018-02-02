@@ -55,7 +55,7 @@ std::string receive(){
     return request_string;
 }
 
-void test_gpio(std::vector<uint8_t> const& the_data){
+void test_gpio_encoding(std::vector<uint8_t> const& the_data){
 
     printf("---------------------------\nTesting GPIO Round Trip...\n");
 
@@ -92,7 +92,7 @@ void test_gpio(std::vector<uint8_t> const& the_data){
     std::cout << "GPIO MATCH" << std::endl;
 }
 
-void test_xadc(std::vector<uint8_t> const& the_data){
+void test_xadc_encoding(std::vector<uint8_t> const& the_data){
 
     printf("---------------------------\nTesting XADC Round Trip...\n");
 
@@ -130,7 +130,7 @@ void test_xadc(std::vector<uint8_t> const& the_data){
     
 }
 
-void test_rawreg(std::vector<uint8_t> const& the_data){
+void test_rawreg_encoding(std::vector<uint8_t> const& the_data){
 
     printf("---------------------------\nTesting RAWREG Round Trip...\n");
 
@@ -169,7 +169,7 @@ void test_rawreg(std::vector<uint8_t> const& the_data){
     
 }
 
-void test_i2c(std::vector<uint8_t> const& the_data){
+void test_i2c_encoding(std::vector<uint8_t> const& the_data){
 
 
     printf("---------------------------\nTesting I2C Round Trip...\n");
@@ -209,7 +209,7 @@ void test_i2c(std::vector<uint8_t> const& the_data){
     
 }
 
-void test_qdr(std::vector<uint8_t> const& the_data){
+void test_qdr_encoding(std::vector<uint8_t> const& the_data){
 
     printf("---------------------------\nTesting QDR Round Trip...\n");
     
@@ -247,7 +247,7 @@ void test_qdr(std::vector<uint8_t> const& the_data){
     std::cout << "QDR MATCH" << std::endl;
     
 }
-void test_ddr(std::vector<uint8_t> const& the_data){
+void test_ddr_encoding(std::vector<uint8_t> const& the_data){
 
 
     printf("---------------------------\nTesting DDR Round Trip...\n");
@@ -287,7 +287,7 @@ void test_ddr(std::vector<uint8_t> const& the_data){
     
 }
 
-void test_qspi(std::vector<uint8_t> const& the_data){
+void test_qspi_encoding(std::vector<uint8_t> const& the_data){
 
     printf("---------------------------\nTesting QSPI Round Trip...\n");
     
@@ -366,45 +366,69 @@ void test_ddr_read_femii(){
     */
 }
 
-void test_ddr_write_femii(){
+void test_ddr_readwrite_femii(){
 
 
-    printf("---------------------------\nTesting DDR Round Trip...\n");
-    
+    printf("---------------------------\nTesting DDR Write - Read Trip...\n");
+    printf("---------------------------\nWriting...\n");
     //initialise a control msg with values.
-    Fem2ControlMsg request(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    Fem2ControlMsg write_request(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
     
-    DDR_RW the_ddr;
-    the_ddr.mem_address = 0x80000000; //DDR base address
-    the_ddr.page = 0;
-    the_ddr.offset = 0x00000001;
-    the_ddr.the_data.push_back(0xFF);        //DDR offset address
-    the_ddr.data_width = WIDTH_BYTE;
-    request.set_payload<DDR_RW>(the_ddr);
+    DDR_RW the_ddr_write;
+    the_ddr_write.mem_address = 0x80000000; //DDR base address
+    the_ddr_write.page = 0;
+    the_ddr_write.offset = 0x00000001;
+    the_ddr_write.the_data.push_back(0xFF);        //DDR offset address
+    the_ddr_write.data_width = WIDTH_BYTE;
+    write_request.set_payload<DDR_RW>(the_ddr_write);
 
-    printf("DDR Request: \n");
-    std::cout << request;
+    printf("DDR Write Request: \n");
+    std::cout << write_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request = encoder.encode(write_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg write_reply = encoder.decode(encoded_reply);
     printf("DDR Reply: \n");
-    std::cout << reply;
+    std::cout << write_reply;
 
-    DDR_RW the_ddr_back = reply.get_payload<DDR_RW>();
+    DDR_RW the_ddr_write_back = write_reply.get_payload<DDR_RW>();
 
-    /*
-    //assert encoded/decoded round trip msgs and payloads are the same thing
-    assert(request == reply);
-    assert(the_ddr == the_ddr_back);
+    printf("---------------------------\nReading...\n");
+    
+    //initialise a control msg with values.
+    Fem2ControlMsg read_request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    DDR_RW the_ddr_read;
+    the_ddr_read.mem_address = 0x80000000; //DDR base address
+    the_ddr_read.page = 0;
+    the_ddr_read.offset = 0x00000001;        //DDR offset address
+    the_ddr_read.data_width = WIDTH_BYTE;
+    read_request.set_payload<DDR_RW>(the_ddr_read);
+
+    printf("DDR Read Request: \n");
+    std::cout << read_request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(read_request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg read_reply = encoder.decode(encoded_reply);
+    printf("DDR Read Reply: \n");
+    std::cout << read_reply;
+
+    DDR_RW the_ddr_read_back = read_reply.get_payload<DDR_RW>();
+
+    assert(the_ddr_write == the_ddr_read_back);    
+ 
     // double check the vector size + data length fields are the same
-    assert(the_ddr_back.the_data.size() == request.data_length_);
-    std::cout << "DDR MATCH" << std::endl;
-    */
+    assert(the_ddr_write.the_data.size() == read_reply.data_length_);
+    std::cout << "DDR WRITE READ MATCH" << std::endl;
 }
 
 
@@ -420,16 +444,16 @@ int main(){
         this_data.push_back(i);
     }
 
-    test_gpio(this_data);
-    test_i2c(this_data);
-    test_xadc(this_data);
-    test_rawreg(this_data);
-    test_qdr(this_data);
-    test_qspi(this_data);
-    //test_ddr(this_data);
+    test_gpio_encoding(this_data);
+    test_i2c_encoding(this_data);
+    test_xadc_encoding(this_data);
+    test_rawreg_encoding(this_data);
+    test_qdr_encoding(this_data);
+    test_qspi_encoding(this_data);
+    //test_ddr_encoding(this_data);
 
-    test_ddr_write_femii(); // writes 0xFF to 0x80000001
-    test_ddr_read_femii();  // reads 0xFF to 0x80000001??
+    //test_ddr_write_femii(); // writes 0xFF to 0x80000001
+    test_ddr_readwrite_femii();  // writes 0xFF to 0x8000 0001 reads 0xFF to 0x80000001??
 
     return 0;
     
