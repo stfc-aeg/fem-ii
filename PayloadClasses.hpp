@@ -87,11 +87,11 @@ class I2C_RW : public PayloadRW{
 
         friend bool operator == (I2C_RW const& lefthand_payload, I2C_RW const& righthand_payload){
             bool equal = true;
-            equal += (lefthand_payload.i2c_bus == righthand_payload.i2c_bus);
-            equal += (lefthand_payload.slave_address == righthand_payload.slave_address);
-            equal += (lefthand_payload.i2c_register == righthand_payload.i2c_register);
-            equal += (lefthand_payload.data_width == righthand_payload.data_width);
-            equal += (lefthand_payload.the_data == righthand_payload.the_data);
+            equal &= (lefthand_payload.i2c_bus == righthand_payload.i2c_bus);
+            equal &= (lefthand_payload.slave_address == righthand_payload.slave_address);
+            equal &= (lefthand_payload.i2c_register == righthand_payload.i2c_register);
+            equal &= (lefthand_payload.data_width == righthand_payload.data_width);
+            equal &= (lefthand_payload.the_data == righthand_payload.the_data);
             //the_data equality.
             return equal;
         };
@@ -125,11 +125,11 @@ class MEM_RW : public PayloadRW{
 
         friend bool operator == (MEM_RW const& lefthand_payload, MEM_RW const& righthand_payload){
             bool equal = true;
-            equal += (lefthand_payload.mem_address == righthand_payload.mem_address);
-            equal += (lefthand_payload.page == righthand_payload.page);
-            equal += (lefthand_payload.offset == righthand_payload.offset);
-            equal += (lefthand_payload.data_width == righthand_payload.data_width);
-            equal += (lefthand_payload.the_data == righthand_payload.the_data);
+            equal &= (lefthand_payload.mem_address == righthand_payload.mem_address);
+            equal &= (lefthand_payload.page == righthand_payload.page);
+            equal &= (lefthand_payload.offset == righthand_payload.offset);
+            equal &= (lefthand_payload.data_width == righthand_payload.data_width);
+            equal &= (lefthand_payload.the_data == righthand_payload.the_data);
             //the_data equality.
             return equal;            
         };
@@ -188,10 +188,10 @@ class Basic_RW : public PayloadRW{
 
         friend bool operator == (Basic_RW const& lefthand_payload, Basic_RW const& righthand_payload){
             bool equal = true;
-            equal += (lefthand_payload.mem_address == righthand_payload.mem_address);
-            equal += (lefthand_payload.mem_register == righthand_payload.mem_register);
-            equal += (lefthand_payload.data_width == righthand_payload.data_width);
-            equal += (lefthand_payload.the_data == righthand_payload.the_data);
+            equal &= (lefthand_payload.mem_address == righthand_payload.mem_address);
+            equal &= (lefthand_payload.mem_register == righthand_payload.mem_register);
+            equal &= (lefthand_payload.data_width == righthand_payload.data_width);
+            equal &= (lefthand_payload.the_data == righthand_payload.the_data);
             //the_data equality.
             return equal;
         };

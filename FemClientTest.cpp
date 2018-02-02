@@ -3,6 +3,11 @@
 #include "Fem2ControlMsg.hpp"
 #include <cassert>
 #include "MsgPackEncoder.hpp"
+
+
+#define DDR3_BASE 0x80000000;
+#define GPIO_STATUS 0x41210000;
+
 /*
 Mock Fem Client - uses ZMQ and MsgPack encoding to send and receive a single
 Fem2ControlMsg in a req-reply synchronous loop.
@@ -326,6 +331,45 @@ void test_qspi_encoding(std::vector<uint8_t> const& the_data){
   
 }
 
+
+void test_gpio_read(){
+
+    printf("---------------------------\nTesting GPIO Round Trip...\n");
+
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_GPIO, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    GPIO_RW the_gpio; 
+    the_gpio.mem_address = GPIO_STATUS;
+    the_gpio.mem_register = 0;
+    the_gpio.data_width = WIDTH_BYTE;
+    request.set_payload<GPIO_RW>(the_gpio);
+
+    printf("GPIO Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("GPIO Reply: \n");
+    std::cout << reply;
+
+    GPIO_RW the_gpio_back = reply.get_payload<GPIO_RW>();
+
+    /*
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_gpio == the_gpio_back);
+    // double check the vector size + data length fields are the same
+    assert(the_gpio_back.the_data.size() == request.data_length_);
+    std::cout << "GPIO MATCH" << std::endl;
+    */
+}
+
 void test_ddr_read_femii(){
 
 
@@ -335,7 +379,7 @@ void test_ddr_read_femii(){
     Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
     
     DDR_RW the_ddr;
-    the_ddr.mem_address = 0x80000000; //DDR base address
+    the_ddr.mem_address = DDR3_BASE; //DDR base address
     the_ddr.page = 0;
     the_ddr.offset = 0x00000001;        //DDR offset address
     the_ddr.data_width = WIDTH_BYTE;
@@ -375,10 +419,10 @@ void test_ddr_readwrite_femii(){
     Fem2ControlMsg write_request(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
     
     DDR_RW the_ddr_write;
-    the_ddr_write.mem_address = 0x80000000; //DDR base address
-    the_ddr_write.page = 0;
+    the_ddr_write.mem_address = DDR3_BASE; //DDR base address
+    the_ddr_write.page = 3;
     the_ddr_write.offset = 0x00000001;
-    the_ddr_write.the_data.push_back(0xFF);        //DDR offset address
+    the_ddr_write.the_data.push_back(0xCC);        //DDR offset address
     the_ddr_write.data_width = WIDTH_BYTE;
     write_request.set_payload<DDR_RW>(the_ddr_write);
 
@@ -403,8 +447,8 @@ void test_ddr_readwrite_femii(){
     Fem2ControlMsg read_request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
     
     DDR_RW the_ddr_read;
-    the_ddr_read.mem_address = 0x80000000; //DDR base address
-    the_ddr_read.page = 0;
+    the_ddr_read.mem_address = DDR3_BASE; //DDR base address
+    the_ddr_read.page = 3;
     the_ddr_read.offset = 0x00000001;        //DDR offset address
     the_ddr_read.data_width = WIDTH_BYTE;
     read_request.set_payload<DDR_RW>(the_ddr_read);
@@ -444,7 +488,7 @@ int main(){
         this_data.push_back(i);
     }
 
-    test_gpio_encoding(this_data);
+    //test_gpio_encoding(this_data);
     test_i2c_encoding(this_data);
     test_xadc_encoding(this_data);
     test_rawreg_encoding(this_data);
@@ -454,7 +498,7 @@ int main(){
 
     //test_ddr_write_femii(); // writes 0xFF to 0x80000001
     test_ddr_readwrite_femii();  // writes 0xFF to 0x8000 0001 reads 0xFF to 0x80000001??
-
+    test_gpio_read();
     return 0;
     
 }

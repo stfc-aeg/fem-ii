@@ -581,14 +581,14 @@ bool operator ==(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& right
 
     bool equal = true;
 
-    equal += (lefthand_msg.get_access_type() == righthand_msg.get_access_type());
-    equal += (lefthand_msg.get_ack_state() == righthand_msg.get_ack_state());
-    equal += (lefthand_msg.get_cmd_type() == righthand_msg.get_cmd_type());
-    equal += (lefthand_msg.get_req_id() == righthand_msg.get_req_id());
-    equal += (lefthand_msg.get_posix_timestamp() == righthand_msg.get_posix_timestamp());
-    equal += (lefthand_msg.get_string_timestamp() == righthand_msg.get_string_timestamp());
-    equal += (lefthand_msg.get_retries() == righthand_msg.get_retries());
-    equal += (lefthand_msg.get_timeout() == righthand_msg.get_timeout());
+    equal &= (lefthand_msg.get_access_type() == righthand_msg.get_access_type());
+    equal &= (lefthand_msg.get_ack_state() == righthand_msg.get_ack_state());
+    equal &= (lefthand_msg.get_cmd_type() == righthand_msg.get_cmd_type());
+    equal &= (lefthand_msg.get_req_id() == righthand_msg.get_req_id());
+    equal &= (lefthand_msg.get_posix_timestamp() == righthand_msg.get_posix_timestamp());
+    equal &= (lefthand_msg.get_string_timestamp() == righthand_msg.get_string_timestamp());
+    equal &= (lefthand_msg.get_retries() == righthand_msg.get_retries());
+    equal &= (lefthand_msg.get_timeout() == righthand_msg.get_timeout());
 
     //TODO - Payload equality 
     return equal;

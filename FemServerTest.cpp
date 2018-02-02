@@ -64,7 +64,7 @@ int main(){
     
 
 
-    for(int x = 0; x < 8; x++){
+    for(int x = 0; x < 8; x++){ //8
 
         // receive request
         std::string encoded_request = receive();
@@ -78,26 +78,30 @@ int main(){
         if(decoded_request.get_access_type() == Femii::Fem2ControlMsg::ACCESS_DDR){
             
             DDR_RW ddr_req = decoded_request.get_payload<DDR_RW>();
-            mem_reader memory_reader(ddr_req.mem_address, ddr_req.offset, ddr_req.data_width);
-            memory_reader.init_mmap();
+
+            // GPIO write to change the page of the DDR memory.
+            GPIO_RW gpio_req;
+            gpio_req.mem_address = 0xA0010000;
+            gpio_req.mem_register = 0;
+            gpio_req.data_width = WIDTH_BYTE;
+            // memory read to write the page
+            mem_reader gpio_memory_reader(gpio_req.mem_address, gpio_req.mem_register, gpio_req.data_width);
+
+
+            gpio_memory_reader.init_mmap();
+            unsigned long page_result = gpio_memory_reader.write_mem(ddr_req.page);
+            std::cout << "DDR page: " << std::to_string(page_result) << std::endl;
+            gpio_memory_reader.unmap();
+
+            // now we can read ddr memory.
+            mem_reader ddr_memory_reader(ddr_req.mem_address, ddr_req.offset, ddr_req.data_width);
+            ddr_memory_reader.init_mmap();
 
             if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_WRITE){
 
-
-                //GPIO page changing.
-                ddr_req.page;
-
-
-
-
-
-
-
-
-
                 // iterate over the data vector, writing memory untill data_length
                 // in this case we KNOW it's 1 byte, at the 1st index.
-                unsigned long result = memory_reader.write_mem(ddr_req.the_data.at(0));
+                unsigned long result = ddr_memory_reader.write_mem(ddr_req.the_data.at(0));
 
                 Fem2ControlMsg write_reply(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK, 0x1234, 10, 0);
                 DDR_RW ddr_reply;
@@ -115,9 +119,9 @@ int main(){
             }
             else if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_READ){
             
-                    unsigned long result = memory_reader.read_mem();
+                    unsigned long result = ddr_memory_reader.read_mem();
                     std::cout << "mem result: " << std::to_string(result) << std::endl;
-                    memory_reader.unmap();
+                    ddr_memory_reader.unmap();
 
                     // form a new Fem2ControlMsg to send back. 
 
@@ -136,6 +140,44 @@ int main(){
             }
 
         }
+
+        else if(decoded_request.get_access_type() == Fem2ControlMsg::ACCESS_GPIO){
+            
+            GPIO_RW gpio_r_req = decoded_request.get_payload<GPIO_RW>();
+            mem_reader gpio_mem_reader(gpio_r_req.mem_address, gpio_r_req.mem_register, gpio_r_req.data_width);
+            gpio_mem_reader.init_mmap();
+
+            if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_READ){
+
+                unsigned long gpio_r_result = gpio_mem_reader.read_mem();
+                std::cout << "mem result: " << std::to_string(gpio_r_result) << std::endl;
+                gpio_mem_reader.unmap();
+
+
+                Fem2ControlMsg gpio_read_reply(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_GPIO, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                GPIO_RW gpio_reply;
+                gpio_reply.mem_address = gpio_r_req.mem_address;
+                gpio_reply.mem_register = gpio_r_req.mem_register;
+                gpio_reply.data_width = gpio_r_req.data_width;
+                gpio_reply.the_data.push_back(gpio_r_result);
+                gpio_read_reply.set_payload<GPIO_RW>(gpio_reply);
+                std::cout<< gpio_reply.print() << std::endl;
+                std::cout<< "data length: " << std::to_string(gpio_read_reply.data_length_) << std::endl;
+                        //encode the fem2controlmsg reply 
+                encoded_reply = encoder.encode(gpio_read_reply);
+
+            }
+
+
+        }
+
+
+
+
+
+
+
+
         else{    
             //encode the fem2controlmsg reply 
             encoded_reply = encoder.encode(decoded_request);

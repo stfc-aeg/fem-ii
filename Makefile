@@ -14,4 +14,4 @@ fem-ii_server_arm: FemServerTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp mem_r
 	$(CC_dyn) -std=c++11 -o fem-ii_server_arm FemServerTest.cpp Fem2ControlMsg.cpp mem_reader.cpp MsgPackEncoder.cpp -DMSGPACK_USE_BOOST -I/u/dbu19518/develop/projects/xilinx/target/usr/include -L/u/dbu19518/develop/projects/xilinx/target/usr/lib -lzmq -lboost_date_time
 
 fem-ii_client_linux: FemClientTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp
-	g++ -std=c++11 -o fem-ii_client_linux FemClientTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp -DMSGPACK_USE_BOOST -I${BOOST_ROOT}/include -I/data/projects/fem-ii/host/include -L${BOOST_ROOT}/lib -L/data/projects/fem-ii/host/lib -lzmq -lboost_date_time
+	g++ -std=c++11 -o fem-ii_client_linux FemClientTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp -DMSGPACK_USE_BOOST -I${BOOST_ROOT}/include -I${ZEROMQ_ROOT}/include -I${MSGPACK_ROOT}/include -L${BOOST_ROOT}/lib -L${ZEROMQ_ROOT}/lib -L${MSGPACK_ROOT}/lib -lzmq -lboost_date_time
