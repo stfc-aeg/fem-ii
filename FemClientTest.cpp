@@ -9,6 +9,7 @@
 #define GPIO_STATUS 0x41210000;
 #define GPIO_DDR3_PAGE 0xA0010000;
 #define BRAM_CONFIG 0xBFFFF000;
+#define XADC_STATUS 0x43C00000;
 
 /*
 Mock Fem Client - uses ZMQ and MsgPack encoding to send and receive a single
@@ -475,9 +476,12 @@ void test_ddr_write_read(){
     DDR_RW the_ddr_write;
     the_ddr_write.mem_address = DDR3_BASE; //DDR base address
     the_ddr_write.page = 3;
-    the_ddr_write.offset = 0x00000001;
-    the_ddr_write.the_data.push_back(0xCC);        //DDR offset address
-    the_ddr_write.data_width = WIDTH_BYTE;
+    the_ddr_write.offset = 0x00000000;
+    the_ddr_write.the_data.push_back(0xAA);
+    the_ddr_write.the_data.push_back(0xBB); 
+    the_ddr_write.the_data.push_back(0xCC); 
+    the_ddr_write.the_data.push_back(0xDD);         //DDR offset address
+    the_ddr_write.data_width = WIDTH_LONG;
     write_request.set_payload<DDR_RW>(the_ddr_write);
 
     printf("DDR Write Request: \n");
@@ -503,8 +507,8 @@ void test_ddr_write_read(){
     DDR_RW the_ddr_read;
     the_ddr_read.mem_address = DDR3_BASE; //DDR base address
     the_ddr_read.page = 3;
-    the_ddr_read.offset = 0x00000001;        //DDR offset address
-    the_ddr_read.data_width = WIDTH_BYTE;
+    the_ddr_read.offset = 0x00000000;        //DDR offset address
+    the_ddr_read.data_width = WIDTH_LONG;
     read_request.set_payload<DDR_RW>(the_ddr_read);
 
     printf("DDR Read Request: \n");
@@ -600,6 +604,43 @@ void test_rawreg_write_read(){
     // double check the vector size + data length fields are the same
     assert(the_rreg_write.the_data.size() == read_reply.data_length_);
     std::cout << "RAWREG WRITE READ MATCH" << std::endl;
+
+}
+
+void test_xadc_read(){
+
+    printf("---------------------------\nTesting XADC Round Trip...\n");
+
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_XADC, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    XADC_RW the_xadc; 
+    the_xadc.mem_address = XADC_STATUS;
+    the_xadc.mem_register = 0x200;
+    the_xadc.data_width = WIDTH_LONG;//??
+    request.set_payload<XADC_RW>(the_xadc);
+
+    printf("XADC Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("XADC Reply: \n");
+    std::cout << reply;
+
+    XADC_RW the_xadc_back = reply.get_payload<XADC_RW>();
+
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_xadc == the_xadc_back);
+    // double check the vector size + data length fields are the same
+    assert(the_xadc_back.the_data.size() == request.data_length_);
+    std::cout << "XADC MATCH" << std::endl;
 
 }
 

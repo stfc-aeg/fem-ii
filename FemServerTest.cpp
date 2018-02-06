@@ -14,10 +14,82 @@ from the content. Sends the same message back.
 */
 using namespace Femii;
 
+/*
+*   Struct to hold two bytes in order MSB - > LSB
+*/
+struct word_bytes{
+    
+    uint8_t byte_lsb;
+    uint8_t byte_msb;
+};
+
+/*
+*   Struct to hold four bytes in order MSB - > LSB
+*/
+struct long_bytes{
+    
+    uint8_t byte_lsb;
+    uint8_t byte2;
+    uint8_t byte3;
+    uint8_t byte_msb;
+};
+
 
 //  create a zmq context and request socket
 zmq::context_t context(1);
 zmq::socket_t socket_(context, ZMQ_REP);
+
+/*
+*   Converts two bytes into a word (uint16_t)
+*   Byte params are in order MSB - > LSB
+*/
+uint16_t from_bytes_to_word(uint8_t MSB, uint8_t LSB){
+    
+    uint16_t result = 0x0000;
+    result = MSB;
+    result = result << 8;
+    result |= LSB;
+    return result;
+};
+
+/*
+*   Converts four bytes into a long (uint32_t)
+*   Byte params are in order MSB - > LSB
+*/
+uint32_t from_bytes_to_long(uint8_t MSB, uint8_t byte3, uint8_t byte2, uint8_t LSB){
+    
+    uint32_t result = 0x00000000;
+    result = ((MSB << 24) | (byte3 << 16) | (byte2 << 8) | (LSB << 0));
+    return result;
+};
+
+/*
+*   Converts a long (uint32_t) into four bytes (uint8_t)
+*   Returns a long_bytes struct 
+*/
+long_bytes from_long_to_bytes(uint32_t data){
+    
+    long_bytes return_;
+    return_.byte_msb = (data >> 24) & 0x00FF;
+    return_.byte3 = (data >> 16) & 0x00FF;
+    return_.byte2 = (data >> 8) & 0x00FF;
+    return_.byte_lsb = (data >> 0) & 0x00FF;
+    return return_;
+};
+
+/*
+*   Converts a word (uint16_t) into two bytes (uint8_t)
+*   Returns a word_bytes struct 
+*/
+word_bytes from_word_to_bytes(uint16_t word){
+    
+    word_bytes return_;
+    return_.byte_msb = (word >> 8) & 0x00FF;
+    return_.byte_lsb = word & 0x00FF;
+    return return_;
+    
+};
+
 
 //  prints the encoded content (buf) as python bytes
 void print_as_python_bytes(std::string const& buf)
@@ -111,7 +183,30 @@ int main(){
 
                     // iterate over the data vector, writing memory untill data_length
                     // in this case we KNOW it's 1 byte, at the 1st index.
-                    unsigned long result = ddr_memory_reader.write_mem(ddr_req.the_data.at(0));
+                    unsigned long result;
+                    switch(ddr_req.data_width){
+
+                        case WIDTH_BYTE:
+                            {
+                                result = ddr_memory_reader.write_mem(ddr_req.the_data.at(0));
+                                break;
+                            }
+                        case WIDTH_WORD:
+                            {    
+                                uint16_t word_data = from_bytes_to_word(ddr_req.the_data.at(1), ddr_req.the_data.at(0));
+                                result = ddr_memory_reader.write_mem(word_data);
+                                break;
+                            }
+                        case WIDTH_LONG:
+                            {
+                                uint32_t long_data = from_bytes_to_long(ddr_req.the_data.at(3), ddr_req.the_data.at(2), ddr_req.the_data.at(1), ddr_req.the_data.at(0));
+                                result = ddr_memory_reader.write_mem(long_data);
+                                break;
+                            }
+                        default:
+                            result = 0; 
+                            throw Fem2ControlMsgException("Illegal Data Width");
+                    }
 
                     Fem2ControlMsg write_reply(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK, 0x1234, 10, 0);
                     DDR_RW ddr_reply;
@@ -119,7 +214,35 @@ int main(){
                     ddr_reply.page = ddr_req.page;
                     ddr_reply.offset = ddr_req.offset; 
                     ddr_reply.data_width = ddr_req.data_width;
-                    ddr_reply.the_data.push_back(result);
+
+                    switch(ddr_req.data_width){
+
+                        case WIDTH_BYTE:
+                            {
+                                ddr_reply.the_data.push_back((uint8_t)result);
+                                break;
+                            }
+                        case WIDTH_WORD:
+                            {
+                                word_bytes the_bytes = from_word_to_bytes((uint16_t)result);
+                                ddr_reply.the_data.push_back(the_bytes.byte_lsb);
+                                ddr_reply.the_data.push_back(the_bytes.byte_msb);
+                                break;
+                            }
+                        case WIDTH_LONG:
+                            {
+                                long_bytes the_long_bytes = from_long_to_bytes((uint32_t)result);
+                                ddr_reply.the_data.push_back(the_long_bytes.byte_lsb);
+                                ddr_reply.the_data.push_back(the_long_bytes.byte2);
+                                ddr_reply.the_data.push_back(the_long_bytes.byte3);
+                                ddr_reply.the_data.push_back(the_long_bytes.byte_msb);
+                                break;
+                            }
+                        default: 
+                            throw Fem2ControlMsgException("Illegal Data Width");
+                            break;
+                    }
+
                     write_reply.set_payload<DDR_RW>(ddr_reply);
                     std::cout<< ddr_reply.print() << std::endl;
                     std::cout<< "data length: " << std::to_string(write_reply.data_length_) << std::endl;
@@ -141,7 +264,37 @@ int main(){
                         ddr_reply.page = ddr_req.page;
                         ddr_reply.offset = ddr_req.offset; 
                         ddr_reply.data_width = ddr_req.data_width;
-                        ddr_reply.the_data.push_back(result);
+
+                        // if LONG: convert the long into 4 bytes..
+
+                        switch(ddr_req.data_width){
+
+                            case WIDTH_BYTE:
+                                {
+                                    ddr_reply.the_data.push_back((uint8_t)result);
+                                    break;
+                                }
+                            case WIDTH_WORD:
+                                {
+                                    word_bytes the_bytes = from_word_to_bytes((uint16_t)result);
+                                    ddr_reply.the_data.push_back(the_bytes.byte_lsb);
+                                    ddr_reply.the_data.push_back(the_bytes.byte_msb);
+                                    break;
+                                }
+                            case WIDTH_LONG:
+                                {
+                                    long_bytes the_long_bytes = from_long_to_bytes((uint32_t)result);
+                                    ddr_reply.the_data.push_back(the_long_bytes.byte_lsb);
+                                    ddr_reply.the_data.push_back(the_long_bytes.byte2);
+                                    ddr_reply.the_data.push_back(the_long_bytes.byte3);
+                                    ddr_reply.the_data.push_back(the_long_bytes.byte_msb);
+                                    break;
+                                }
+                            default: 
+                                throw Fem2ControlMsgException("Illegal Data Width");
+                                break;
+                        }
+
                         read_reply.set_payload<DDR_RW>(ddr_reply);
                         std::cout<< ddr_reply.print() << std::endl;
                         std::cout<< "data length: " << std::to_string(read_reply.data_length_) << std::endl;
@@ -246,6 +399,14 @@ int main(){
 
                 }
             }  // raw-reg
+
+            else if(decoded_request.get_access_type() == Fem2ControlMsg::ACCESS_XADC){
+                             
+                XADC_RW xadc_req = decoded_request.get_payload<XADC_RW>();
+                mem_reader xadc_mem_reader(xadc_req.mem_address, xadc_req.mem_register, xadc_req.data_width);
+                xadc_mem_reader.init_mmap();
+
+            }//xadc
 
         } // read-write-config
 

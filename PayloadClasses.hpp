@@ -70,18 +70,20 @@ class I2C_RW : public PayloadRW{
 
         std::string print(){
 
-            std::string output = "";
-            output += "    I2C Bus : " + std::to_string(this->i2c_bus) + ",\n";
-            output += "    I2C Slave Address : " + std::to_string(this->slave_address) + ",\n";
-            output += "    I2C Register : " + std::to_string(this->i2c_register) + ",\n";
-            output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
+            std::stringstream sstream;
+            sstream << "    I2C Bus : 0x" << std::hex << this->i2c_bus << ",\n";
+            sstream << "    I2C Slave Address : 0x" << std::hex << this->slave_address << ",\n";
+            sstream << "    I2C Register : 0x" << std::hex << this->i2c_register << ",\n";
+            sstream << "    Data Width : " << init_data_width_map(this->data_width) <<  ",\n";
             if (! this->the_data.empty())
             {
-                output += "    The Data : ";
+                sstream << "    The Data : ";
                 for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                    output += std::to_string(*i) + ", ";
+                    sstream << "0x" << std::hex << uint32_t(*i) << ", ";
                 }   
             }
+
+            std::string output = sstream.str();
             return output;
         };
 
@@ -108,18 +110,19 @@ class MEM_RW : public PayloadRW{
 
         std::string print(){
 
-            std::string output = "";
-            output += "    Memory Address : " + std::to_string(this->mem_address) + ",\n";
-            output += "    Memory Page : " + std::to_string(this->page) + ",\n";
-            output += "    Memory Address Offset : " + std::to_string(this->offset) + ",\n";            
-            output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
+            std::stringstream sstream;
+            sstream << "    Memory Address : 0x" << std::hex << this->mem_address << ",\n";
+            sstream << "    Memory Page : 0x" << std::hex << this->page << ",\n";
+            sstream << "    Memory Address Offset : 0x" << std::hex << this->offset << ",\n";            
+            sstream << "    Data Width : " << init_data_width_map(this->data_width) << ",\n";
             if (! this->the_data.empty()) //if there's no data don't print it
             {
-                output += "    The Data : ";
+                sstream << "    The Data : ";
                 for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                    output += std::to_string(*i) + ", ";
+                    sstream << "0x" << std::hex << uint32_t(*i) << ", ";
                 }
             }   
+            std::string output = sstream.str();
             return output;
         }
 
@@ -171,18 +174,19 @@ class Basic_RW : public PayloadRW{
 
         std::string print(){
 
-            std::string output = "";
-            output += "    Memory Address : " + std::to_string(this->mem_address) + ",\n";
-            output += "    Memory Register : " + std::to_string(this->mem_register) + ",\n";
-            output += "    Data Width : " + init_data_width_map(this->data_width) + ",\n";
+            std::stringstream sstream;
+            sstream << "    Memory Address : 0x" << std::hex << this->mem_address << ",\n";
+            sstream << "    Memory Register : 0x" << std::hex << this->mem_register << ",\n";
+            sstream << "    Data Width : " << init_data_width_map(this->data_width) << ",\n";
             
             if (! this->the_data.empty()) //if there's no data don't print it
             { 
-                output += "    The Data : ";
+                sstream <<  "    The Data : ";
                 for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-                    output += std::to_string(*i) + ", ";
+                    sstream << "0x" << std::hex << uint32_t(*i) << ", ";
                 }   
             }
+            std::string output = sstream.str();
             return output;
         }
 

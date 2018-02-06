@@ -45,10 +45,10 @@ unsigned long mem_reader::read_mem(){
         case WIDTH_BYTE:
             this->read_result = *((unsigned char *) this->virt_addr); // cast virt_address as an unsigned char pointer, then dereference i.e get the value.
             break;
-        case 'h':
+        case WIDTH_WORD:
             this->read_result = *((unsigned short *) this->virt_addr);
             break;
-        case 'w':
+        case WIDTH_LONG:
             this->read_result = *((unsigned long *) this->virt_addr);
             break;
         default:
@@ -70,11 +70,11 @@ unsigned long mem_reader::write_mem(unsigned long the_data){
                 *((unsigned char *) this->virt_addr) = this->writeval;
                 this->read_result = *((unsigned char *) this->virt_addr);
                 break;
-            case 'h':
+            case WIDTH_WORD:
                 *((unsigned short *) this->virt_addr) = this->writeval;
                 this->read_result = *((unsigned short *) this->virt_addr);
                 break;
-            case 'w':
+            case WIDTH_LONG:
                 *((unsigned long *) this->virt_addr) = this->writeval;
                 this->read_result = *((unsigned long *) this->virt_addr);
                 break;
