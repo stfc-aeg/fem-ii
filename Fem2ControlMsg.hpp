@@ -65,6 +65,169 @@ private:
 };// fem2controlmsgexception
 };// femii namespace
 
+namespace Femii{
+
+    struct bytes{
+        uint8_t byte;
+    };
+
+    /*
+    *   Struct to hold two bytes in order MSB - > LSB
+    */
+    struct word_bytes{
+        
+        uint8_t byte_lsb;
+        uint8_t byte_msb;
+    };
+
+    /*
+    *   Struct to hold four bytes in order MSB - > LSB
+    */
+    struct long_bytes{
+        
+        uint8_t byte_lsb;
+        uint8_t byte2;
+        uint8_t byte3;
+        uint8_t byte_msb;
+    };
+
+    /*
+    *   Converts two bytes into a word (uint16_t)
+    *   Byte params are in order MSB - > LSB
+    */
+    inline uint16_t from_bytes_to_word(uint8_t MSB, uint8_t LSB){
+        
+        uint16_t result = 0x0000;
+        result = MSB;
+        result = result << 8;
+        result |= LSB;
+        return result;
+    };
+
+    /*
+    *   Converts four bytes into a long (uint32_t)
+    *   Byte params are in order MSB - > LSB
+    */
+    inline uint32_t from_bytes_to_long(uint8_t MSB, uint8_t byte3, uint8_t byte2, uint8_t LSB){
+        
+        uint32_t result = 0x00000000;
+        result = ((MSB << 24) | (byte3 << 16) | (byte2 << 8) | (LSB << 0));
+        return result;
+    };
+
+    /*
+    *   Converts a long (uint32_t) into four bytes (uint8_t)
+    *   Returns a long_bytes struct 
+    */
+    inline long_bytes from_long_to_bytes(uint32_t data){
+        
+        printf("long data: %d", data);
+        long_bytes return_;
+        return_.byte_msb = (data >> 24) & 0x00FF;
+        return_.byte3 = (data >> 16) & 0x00FF;
+        return_.byte2 = (data >> 8) & 0x00FF;
+        return_.byte_lsb = (data >> 0) & 0x00FF;
+        return return_;
+    };
+
+    /*
+    *   Converts a word (uint16_t) into two bytes (uint8_t)
+    *   Returns a word_bytes struct 
+    */
+    inline word_bytes from_word_to_bytes(uint16_t word){
+        printf("word data: %d", word);
+        word_bytes return_;
+        return_.byte_msb = (word >> 8) & 0x00FF;
+        return_.byte_lsb = word & 0x00FF;
+        return return_;
+        
+    };
+
+    inline bytes from_long_to_byte(uint32_t data){
+        
+        bytes the_byte;
+        the_byte.byte = (data >> 0) & 0x00FF;
+        return the_byte;
+        
+    }
+
+    template <typename T> void get_bytes(unsigned long result, T &the_payload){
+
+        switch(the_payload.data_width){
+
+            case WIDTH_BYTE:
+                {
+                    std::cout << "result: " << (uint8_t)result << std::endl;
+                    the_payload.the_data.push_back((uint8_t)result);
+                    break;
+                }
+
+            case WIDTH_WORD:
+                {
+                    std::cout << "result: " << (uint16_t)result << std::endl;
+                    word_bytes the_bytes = from_word_to_bytes((uint16_t)result);
+                    the_payload.the_data.push_back(the_bytes.byte_lsb);
+                    the_payload.the_data.push_back(the_bytes.byte_msb);
+                    break;
+                }
+            case WIDTH_LONG:
+                {
+                    std::cout << "result: " << (uint32_t)result << std::endl;
+                    long_bytes the_long_bytes = from_long_to_bytes((uint32_t)result);
+                    the_payload.the_data.push_back(the_long_bytes.byte_lsb);
+                    the_payload.the_data.push_back(the_long_bytes.byte2);
+                    the_payload.the_data.push_back(the_long_bytes.byte3);
+                    the_payload.the_data.push_back(the_long_bytes.byte_msb);
+                    break;
+                }
+            default: 
+                throw Fem2ControlMsgException("Illegal Data Width");
+                break;
+        }
+    }
+
+    template <typename T> uint32_t form_words_longs(T &the_payload){
+
+        uint32_t result;
+
+        switch(the_payload.data_width){
+
+            case WIDTH_BYTE:
+                {
+                    printf("I'm bytes\n");
+                    std::cout << the_payload.print() << std::endl;
+                    std::cout << "size = " << the_payload.the_data.size() << std::endl;
+                    result = the_payload.the_data.at(0);
+                    break;
+                }
+            case WIDTH_WORD:
+                {    
+                    printf("I'm Words\n");
+                    std::cout << the_payload.print() << std::endl;
+                    std::cout << "size = " << the_payload.the_data.size() << std::endl;
+                    uint16_t word_data = from_bytes_to_word(the_payload.the_data.at(1), the_payload.the_data.at(0));
+                    result = word_data;
+                    //result = ddr_memory_reader.write_mem(word_data);
+                    break;
+                }
+            case WIDTH_LONG:
+                {
+                    std::cout << "size = " << the_payload.the_data.size() << std::endl;
+                    uint32_t long_data = from_bytes_to_long(the_payload.the_data.at(3), the_payload.the_data.at(2), the_payload.the_data.at(1), the_payload.the_data.at(0));
+                    result = long_data;
+                    //result = ddr_memory_reader.write_mem(long_data);
+                    break;
+                }
+            default:
+                result = 0; 
+                throw Fem2ControlMsgException("Illegal Data Width");
+        }
+
+        return result;
+    }
+    
+};
+
 namespace Femii
 {
 

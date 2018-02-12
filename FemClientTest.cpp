@@ -10,6 +10,9 @@
 #define GPIO_DDR3_PAGE 0xA0010000;
 #define BRAM_CONFIG 0xBFFFF000;
 #define XADC_STATUS 0x43C00000;
+#define QSPI_BASE 0xA0030000;
+#define LED_REGISTER 0xA0020008;
+
 
 /*
 Mock Fem Client - uses ZMQ and MsgPack encoding to send and receive a single
@@ -399,7 +402,8 @@ void test_gpio_write_read(){
     the_gpio_write.mem_address = GPIO_DDR3_PAGE;
     the_gpio_write.mem_register = 0;
     the_gpio_write.data_width = WIDTH_BYTE;
-    the_gpio_write.the_data.push_back(5);        //DDR offset address
+    the_gpio_write.the_data.push_back(0x05);
+            //DDR offset address
     write_request.set_payload<GPIO_RW>(the_gpio_write);
 
     printf("GPIO Write Request: \n");
@@ -443,7 +447,6 @@ void test_gpio_write_read(){
 
     GPIO_RW the_gpio_read_back = read_reply.get_payload<GPIO_RW>();
 
-
     assert(the_gpio_write == the_gpio_read_back);    
  
     // double check the vector size + data length fields are the same
@@ -477,10 +480,12 @@ void test_ddr_write_read(){
     the_ddr_write.mem_address = DDR3_BASE; //DDR base address
     the_ddr_write.page = 3;
     the_ddr_write.offset = 0x00000000;
+    
     the_ddr_write.the_data.push_back(0xAA);
-    the_ddr_write.the_data.push_back(0xBB); 
+    the_ddr_write.the_data.push_back(0xBB);
     the_ddr_write.the_data.push_back(0xCC); 
-    the_ddr_write.the_data.push_back(0xDD);         //DDR offset address
+    the_ddr_write.the_data.push_back(0xDD);
+   
     the_ddr_write.data_width = WIDTH_LONG;
     write_request.set_payload<DDR_RW>(the_ddr_write);
 
@@ -553,8 +558,9 @@ void test_rawreg_write_read(){
     RAWREG_RW the_rreg_write; 
     the_rreg_write.mem_address = BRAM_CONFIG;
     the_rreg_write.mem_register = 0;
-    the_rreg_write.data_width = WIDTH_BYTE;
+    the_rreg_write.data_width = WIDTH_WORD;
     the_rreg_write.the_data.push_back(0x01);
+    the_rreg_write.the_data.push_back(0x02);
     write_request.set_payload<RAWREG_RW>(the_rreg_write);
 
     printf("GPIO Write Request: \n");
@@ -580,7 +586,7 @@ void test_rawreg_write_read(){
     RAWREG_RW the_rreg_read; 
     the_rreg_read.mem_address = BRAM_CONFIG;
     the_rreg_read.mem_register = 0;
-    the_rreg_read.data_width = WIDTH_BYTE;
+    the_rreg_read.data_width = WIDTH_WORD;
     read_request.set_payload<RAWREG_RW>(the_rreg_read);
 
     printf("RAWREG Request: \n");
@@ -609,7 +615,7 @@ void test_rawreg_write_read(){
 
 void test_xadc_read(){
 
-    printf("---------------------------\nTesting XADC Round Trip...\n");
+    printf("---------------------------\nTesting XADC Read Trip...\n");
 
     //initialise a control msg with values.
     Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_XADC, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
@@ -617,7 +623,7 @@ void test_xadc_read(){
     XADC_RW the_xadc; 
     the_xadc.mem_address = XADC_STATUS;
     the_xadc.mem_register = 0x200;
-    the_xadc.data_width = WIDTH_LONG;//??
+    the_xadc.data_width = WIDTH_WORD;//??
     request.set_payload<XADC_RW>(the_xadc);
 
     printf("XADC Request: \n");
@@ -635,12 +641,97 @@ void test_xadc_read(){
 
     XADC_RW the_xadc_back = reply.get_payload<XADC_RW>();
 
+    uint32_t temp = form_words_longs<XADC_RW>(the_xadc_back);
+    printf("Temp pre shift : 0x%.2X \n", temp);
+    temp = temp >> 4;
+    temp = ((temp * 503.975)/ 4096) - 273.15;
+
+    printf("FEM-II Temperature: %d Degrees C.\n", temp);
+
     //assert encoded/decoded round trip msgs and payloads are the same thing
-    assert(request == reply);
-    assert(the_xadc == the_xadc_back);
+    //assert(request == reply);
+    //assert(the_xadc == the_xadc_back);
     // double check the vector size + data length fields are the same
-    assert(the_xadc_back.the_data.size() == request.data_length_);
+    //assert(the_xadc_back.the_data.size() == request.data_length_);
     std::cout << "XADC MATCH" << std::endl;
+}
+
+void test_qspi_read(){
+
+    printf("---------------------------\nTesting QSPI Read Trip...\n");
+
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_QSPI, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    QSPI_RW the_qspi; 
+    the_qspi.mem_address = QSPI_BASE;
+    the_qspi.offset = 0x64;
+    the_qspi.data_width = WIDTH_BYTE;//??
+    request.set_payload<QSPI_RW>(the_qspi);
+
+    printf("QSPI Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("QSPI Reply: \n");
+    std::cout << reply;
+
+    QSPI_RW the_qspi_back = reply.get_payload<QSPI_RW>();
+
+    uint32_t result = form_words_longs<QSPI_RW>(the_qspi_back);
+   
+    assert(result == 0x000000A5);
+    std::cout << "QSPI MATCH" << std::endl;
+}
+
+void led_control(bool on_off){
+
+    std::string on_off_string;
+    if(on_off){
+        on_off_string = "on";
+    }
+    else{
+        on_off_string = "off";
+    }
+    printf("---------------------------\Turning Both LED's %s...\n", on_off_string.c_str());
+
+    //initialise a control msg with values.
+    Fem2ControlMsg write_request(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_GPIO, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    GPIO_RW the_gpio_write; 
+    the_gpio_write.mem_address = LED_REGISTER;
+    the_gpio_write.mem_register = 0;
+    the_gpio_write.data_width = WIDTH_BYTE;
+
+    if(on_off){
+        the_gpio_write.the_data.push_back(0x03);
+    }
+    else{
+        the_gpio_write.the_data.push_back(0x00);
+    }
+ 
+    write_request.set_payload<GPIO_RW>(the_gpio_write);
+
+    printf("GPIO Write Request: \n");
+    std::cout << write_request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_write_request = encoder.encode(write_request);
+    send(encoded_write_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_write_reply = receive();
+    Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
+    printf("GPIO WRITE Reply: \n");
+    std::cout << write_reply;
+
+    GPIO_RW the_gpio_write_back = write_reply.get_payload<GPIO_RW>();
 
 }
 
@@ -668,6 +759,19 @@ int main(){
     test_ddr_write_read();  // writes 0xFF to 0x8000 0001 reads 0xFF to 0x80000001?? x2
     test_gpio_write_read();
     test_rawreg_write_read();
+    test_xadc_read();
+    test_qspi_read();
+
+    while(true){
+        led_control(true);
+        sleep(1);
+        led_control(false);
+        sleep(1);
+    }
+
+    //led_control(false);
+ 
+
     return 0;
     
 }

@@ -12,83 +12,13 @@ Fem2ControlMsg in a req-reply synchronous loop.
 Receives an encoded Fem2ControlMsg, decodes and creates a new Fem2ControlMsg
 from the content. Sends the same message back. 
 */
+
+
 using namespace Femii;
-
-/*
-*   Struct to hold two bytes in order MSB - > LSB
-*/
-struct word_bytes{
-    
-    uint8_t byte_lsb;
-    uint8_t byte_msb;
-};
-
-/*
-*   Struct to hold four bytes in order MSB - > LSB
-*/
-struct long_bytes{
-    
-    uint8_t byte_lsb;
-    uint8_t byte2;
-    uint8_t byte3;
-    uint8_t byte_msb;
-};
-
 
 //  create a zmq context and request socket
 zmq::context_t context(1);
 zmq::socket_t socket_(context, ZMQ_REP);
-
-/*
-*   Converts two bytes into a word (uint16_t)
-*   Byte params are in order MSB - > LSB
-*/
-uint16_t from_bytes_to_word(uint8_t MSB, uint8_t LSB){
-    
-    uint16_t result = 0x0000;
-    result = MSB;
-    result = result << 8;
-    result |= LSB;
-    return result;
-};
-
-/*
-*   Converts four bytes into a long (uint32_t)
-*   Byte params are in order MSB - > LSB
-*/
-uint32_t from_bytes_to_long(uint8_t MSB, uint8_t byte3, uint8_t byte2, uint8_t LSB){
-    
-    uint32_t result = 0x00000000;
-    result = ((MSB << 24) | (byte3 << 16) | (byte2 << 8) | (LSB << 0));
-    return result;
-};
-
-/*
-*   Converts a long (uint32_t) into four bytes (uint8_t)
-*   Returns a long_bytes struct 
-*/
-long_bytes from_long_to_bytes(uint32_t data){
-    
-    long_bytes return_;
-    return_.byte_msb = (data >> 24) & 0x00FF;
-    return_.byte3 = (data >> 16) & 0x00FF;
-    return_.byte2 = (data >> 8) & 0x00FF;
-    return_.byte_lsb = (data >> 0) & 0x00FF;
-    return return_;
-};
-
-/*
-*   Converts a word (uint16_t) into two bytes (uint8_t)
-*   Returns a word_bytes struct 
-*/
-word_bytes from_word_to_bytes(uint16_t word){
-    
-    word_bytes return_;
-    return_.byte_msb = (word >> 8) & 0x00FF;
-    return_.byte_lsb = word & 0x00FF;
-    return return_;
-    
-};
 
 
 //  prints the encoded content (buf) as python bytes
@@ -129,14 +59,17 @@ std::string receive()
 
 int main(){
 
+    
+
+
     socket_.bind("tcp://*:5555");
     printf("server Booted \n");
     //   create a msgpack encoder
     MsgPackEncoder encoder;
 
-    int test_num = 13;
+    int test_num = 18;
     
-    for(int x = 0; x < test_num; x++){ 
+    while(true) /*for(int x = 0; x < test_num; x++)*/{ 
 
         // receive request
         std::string encoded_request = receive();
@@ -156,18 +89,18 @@ int main(){
         }
 
         else{ //testing read-write-config
- 
+            
             if(decoded_request.get_access_type() == Femii::Fem2ControlMsg::ACCESS_DDR){
                 
                 DDR_RW ddr_req = decoded_request.get_payload<DDR_RW>();
 
                 // GPIO write to change the page of the DDR memory.
-                GPIO_RW gpio_req;
-                gpio_req.mem_address = 0xA0010000;
-                gpio_req.mem_register = 0;
-                gpio_req.data_width = WIDTH_BYTE;
+                GPIO_RW gpio_page_req;
+                gpio_page_req.mem_address = 0xA0010000;
+                gpio_page_req.mem_register = 0;
+                gpio_page_req.data_width = WIDTH_BYTE;
                 // memory read to write the page
-                mem_reader gpio_memory_reader(gpio_req.mem_address, gpio_req.mem_register, gpio_req.data_width);
+                mem_reader gpio_memory_reader(gpio_page_req.mem_address, gpio_page_req.mem_register, gpio_page_req.data_width);
 
 
                 gpio_memory_reader.init_mmap();
@@ -183,30 +116,20 @@ int main(){
 
                     // iterate over the data vector, writing memory untill data_length
                     // in this case we KNOW it's 1 byte, at the 1st index.
-                    unsigned long result;
-                    switch(ddr_req.data_width){
-
-                        case WIDTH_BYTE:
-                            {
-                                result = ddr_memory_reader.write_mem(ddr_req.the_data.at(0));
-                                break;
-                            }
-                        case WIDTH_WORD:
-                            {    
-                                uint16_t word_data = from_bytes_to_word(ddr_req.the_data.at(1), ddr_req.the_data.at(0));
-                                result = ddr_memory_reader.write_mem(word_data);
-                                break;
-                            }
-                        case WIDTH_LONG:
-                            {
-                                uint32_t long_data = from_bytes_to_long(ddr_req.the_data.at(3), ddr_req.the_data.at(2), ddr_req.the_data.at(1), ddr_req.the_data.at(0));
-                                result = ddr_memory_reader.write_mem(long_data);
-                                break;
-                            }
-                        default:
-                            result = 0; 
-                            throw Fem2ControlMsgException("Illegal Data Width");
+                    
+                    //unsigned long write_data = form_words_longs(ddr_req);
+                    unsigned long write_data = form_words_longs<DDR_RW>(ddr_req);
+                    /*
+                    if(ddr_req.data_width == WIDTH_BYTE){
+                        write_data = ddr_req.the_data.at(0);
                     }
+                    else{
+                        write_data = form_words_longs(ddr_req);
+                    }
+                    */
+                    std::cout << "size = " << ddr_req.the_data.size() << std::endl;
+                    std::cout << "length = " << decoded_request.data_length_ << std::endl;
+                    unsigned long write_result = ddr_memory_reader.write_mem(write_data);
 
                     Fem2ControlMsg write_reply(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_DDR, Fem2ControlMsg::ACK, 0x1234, 10, 0);
                     DDR_RW ddr_reply;
@@ -214,40 +137,25 @@ int main(){
                     ddr_reply.page = ddr_req.page;
                     ddr_reply.offset = ddr_req.offset; 
                     ddr_reply.data_width = ddr_req.data_width;
-
-                    switch(ddr_req.data_width){
-
-                        case WIDTH_BYTE:
-                            {
-                                ddr_reply.the_data.push_back((uint8_t)result);
-                                break;
-                            }
-                        case WIDTH_WORD:
-                            {
-                                word_bytes the_bytes = from_word_to_bytes((uint16_t)result);
-                                ddr_reply.the_data.push_back(the_bytes.byte_lsb);
-                                ddr_reply.the_data.push_back(the_bytes.byte_msb);
-                                break;
-                            }
-                        case WIDTH_LONG:
-                            {
-                                long_bytes the_long_bytes = from_long_to_bytes((uint32_t)result);
-                                ddr_reply.the_data.push_back(the_long_bytes.byte_lsb);
-                                ddr_reply.the_data.push_back(the_long_bytes.byte2);
-                                ddr_reply.the_data.push_back(the_long_bytes.byte3);
-                                ddr_reply.the_data.push_back(the_long_bytes.byte_msb);
-                                break;
-                            }
-                        default: 
-                            throw Fem2ControlMsgException("Illegal Data Width");
-                            break;
+                    /*
+                    if(ddr_req.data_width == WIDTH_BYTE){
+                        ddr_reply.the_data.push_back((uint8_t)write_result);
                     }
+                    else{
+                        get_bytes(write_result, ddr_reply);
+                    }
+                    */
+                    //get_bytes(write_result, );
+
+                    get_bytes<DDR_RW>(write_result, ddr_reply);
+
 
                     write_reply.set_payload<DDR_RW>(ddr_reply);
                     std::cout<< ddr_reply.print() << std::endl;
                     std::cout<< "data length: " << std::to_string(write_reply.data_length_) << std::endl;
                     //encode the fem2controlmsg reply 
                     encoded_reply = encoder.encode(write_reply);
+                    ddr_memory_reader.unmap();
 
                 }
                 else if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_READ){
@@ -265,44 +173,25 @@ int main(){
                         ddr_reply.offset = ddr_req.offset; 
                         ddr_reply.data_width = ddr_req.data_width;
 
-                        // if LONG: convert the long into 4 bytes..
-
-                        switch(ddr_req.data_width){
-
-                            case WIDTH_BYTE:
-                                {
-                                    ddr_reply.the_data.push_back((uint8_t)result);
-                                    break;
-                                }
-                            case WIDTH_WORD:
-                                {
-                                    word_bytes the_bytes = from_word_to_bytes((uint16_t)result);
-                                    ddr_reply.the_data.push_back(the_bytes.byte_lsb);
-                                    ddr_reply.the_data.push_back(the_bytes.byte_msb);
-                                    break;
-                                }
-                            case WIDTH_LONG:
-                                {
-                                    long_bytes the_long_bytes = from_long_to_bytes((uint32_t)result);
-                                    ddr_reply.the_data.push_back(the_long_bytes.byte_lsb);
-                                    ddr_reply.the_data.push_back(the_long_bytes.byte2);
-                                    ddr_reply.the_data.push_back(the_long_bytes.byte3);
-                                    ddr_reply.the_data.push_back(the_long_bytes.byte_msb);
-                                    break;
-                                }
-                            default: 
-                                throw Fem2ControlMsgException("Illegal Data Width");
-                                break;
+                        /*
+                         if(ddr_req.data_width == WIDTH_BYTE){
+                            ddr_reply.the_data.push_back((uint8_t)result);
                         }
-
+                        else{
+                            get_bytes(result, ddr_reply);
+                        }
+                        */
+                        //get_bytes(result, ddr_reply);
+                        get_bytes<DDR_RW>(result, ddr_reply);
                         read_reply.set_payload<DDR_RW>(ddr_reply);
                         std::cout<< ddr_reply.print() << std::endl;
                         std::cout<< "data length: " << std::to_string(read_reply.data_length_) << std::endl;
                             //encode the fem2controlmsg reply 
                         encoded_reply = encoder.encode(read_reply);
+                        
                 } // ddr-read
             } // ddr
-
+            
             else if(decoded_request.get_access_type() == Fem2ControlMsg::ACCESS_GPIO){
                 
                 GPIO_RW gpio_req = decoded_request.get_payload<GPIO_RW>();
@@ -313,21 +202,45 @@ int main(){
 
                      // iterate over the data vector, writing memory untill data_length
                     // in this case we KNOW it's 1 byte, at the 1st index.
-                    unsigned long gpio_write_result = gpio_mem_reader.write_mem(gpio_req.the_data.at(0));
+                    
+                    std::cout << gpio_req.print() << std::endl;
+                    std::cout << "size = " << gpio_req.the_data.size() << std::endl;
+                    std::cout << "length = " << decoded_request.data_length_ << std::endl;
+                    
+                    unsigned long gpio_write_data = form_words_longs<GPIO_RW>(gpio_req);
+                    /*
+                    if(gpio_req.data_width == WIDTH_BYTE){
+                        gpio_write_data = gpio_req.the_data.at(0);
+                    }
+                    else{
+                        gpio_write_data = form_words_longs(gpio_req);
+                    }
+                    */
+                    unsigned long gpio_write_result = gpio_mem_reader.write_mem(gpio_write_data);
                     std::cout << "GPIO Write : " << std::to_string(gpio_write_result) << std::endl;
-                    gpio_mem_reader.unmap();
-
+                    
                     Fem2ControlMsg gpio_write_reply(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_GPIO, Fem2ControlMsg::ACK, 0x1234, 10, 0);
                     GPIO_RW gpio_w_reply;
                     gpio_w_reply.mem_address = gpio_req.mem_address;
                     gpio_w_reply.mem_register = gpio_req.mem_register;
                     gpio_w_reply.data_width = gpio_req.data_width;
-                    gpio_w_reply.the_data.push_back(gpio_write_result);
+
+                    /*
+                    if(gpio_req.data_width == WIDTH_BYTE){
+                        gpio_w_reply.the_data.push_back((uint8_t)gpio_write_result);
+                    }
+                    else{
+                        get_bytes(gpio_write_result, gpio_w_reply);
+                    }
+                    */
+                    get_bytes<GPIO_RW>(gpio_write_result, gpio_w_reply);
                     gpio_write_reply.set_payload<GPIO_RW>(gpio_w_reply);
                     std::cout<< gpio_w_reply.print() << std::endl;
                     std::cout<< "data length: " << std::to_string(gpio_write_reply.data_length_) << std::endl;
+
                     //encode the fem2controlmsg reply 
                     encoded_reply = encoder.encode(gpio_write_reply);
+                    gpio_mem_reader.unmap();
 
                 } //gpio write
                 else if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_READ){
@@ -336,17 +249,25 @@ int main(){
                     std::cout << "mem result: " << std::to_string(gpio_r_result) << std::endl;
                     gpio_mem_reader.unmap();
 
-
                     Fem2ControlMsg gpio_read_reply(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_GPIO, Fem2ControlMsg::ACK, 0x1234, 10, 0);
                     GPIO_RW gpio_reply;
                     gpio_reply.mem_address = gpio_req.mem_address;
                     gpio_reply.mem_register = gpio_req.mem_register;
                     gpio_reply.data_width = gpio_req.data_width;
-                    gpio_reply.the_data.push_back(gpio_r_result);
+
+                    /*
+                    if(gpio_req.data_width == WIDTH_BYTE){
+                        gpio_reply.the_data.push_back((uint8_t)gpio_r_result);
+                    }
+                    else{
+                        get_bytes(gpio_r_result, gpio_reply);
+                    }
+                    */
+                    get_bytes<GPIO_RW>(gpio_r_result, gpio_reply);
                     gpio_read_reply.set_payload<GPIO_RW>(gpio_reply);
                     std::cout<< gpio_reply.print() << std::endl;
                     std::cout<< "data length: " << std::to_string(gpio_read_reply.data_length_) << std::endl;
-                            //encode the fem2controlmsg reply 
+                    //encode the fem2controlmsg reply 
                     encoded_reply = encoder.encode(gpio_read_reply);
 
                 } // gpio-read
@@ -362,7 +283,17 @@ int main(){
 
                      // iterate over the data vector, writing memory untill data_length
                     // in this case we KNOW it's 1 byte, at the 1st index.
-                    unsigned long rreg_write_result = rreg_mem_reader.write_mem(rreg_req.the_data.at(0));
+
+                    unsigned long rreg_write_data = form_words_longs<RAWREG_RW>(rreg_req);
+                    /*
+                    if(rreg_req.data_width == WIDTH_BYTE){
+                        rreg_write_data = rreg_req.the_data.at(0);
+                    }
+                    else{
+                        rreg_write_data = form_words_longs(rreg_req);
+                    }
+                    */
+                    unsigned long rreg_write_result = rreg_mem_reader.write_mem(rreg_write_data);
                     std::cout << "RAWREG Write : " << std::to_string(rreg_write_result) << std::endl;
                     rreg_mem_reader.unmap();
 
@@ -371,7 +302,16 @@ int main(){
                     rreg_w_reply.mem_address = rreg_req.mem_address;
                     rreg_w_reply.mem_register = rreg_req.mem_register;
                     rreg_w_reply.data_width = rreg_req.data_width;
-                    rreg_w_reply.the_data.push_back(rreg_write_result);
+                    /*
+                    if(rreg_req.data_width == WIDTH_BYTE){
+                        rreg_w_reply.the_data.push_back((uint8_t)rreg_write_result);
+                    }
+                    else{
+                        get_bytes(rreg_write_result, rreg_w_reply);
+                    }
+                    */
+
+                    get_bytes<RAWREG_RW>(rreg_write_result, rreg_w_reply);
                     rreg_write_reply.set_payload<RAWREG_RW>(rreg_w_reply);
                     std::cout<< rreg_w_reply.print() << std::endl;
                     std::cout<< "data length: " << std::to_string(rreg_write_reply.data_length_) << std::endl;
@@ -390,7 +330,17 @@ int main(){
                     rreg_reply.mem_address = rreg_req.mem_address;
                     rreg_reply.mem_register = rreg_req.mem_register;
                     rreg_reply.data_width = rreg_req.data_width;
-                    rreg_reply.the_data.push_back(rreg_r_result);
+
+                    /*
+                    if(rreg_req.data_width == WIDTH_BYTE){
+                        rreg_reply.the_data.push_back((uint8_t)rreg_r_result);
+                    }
+                    else{
+                        get_bytes(rreg_r_result, rreg_reply);
+                    }
+                    */
+                    get_bytes<RAWREG_RW>(rreg_r_result, rreg_reply);
+                    //rreg_reply.the_data.push_back(rreg_r_result);
                     rreg_read_reply.set_payload<RAWREG_RW>(rreg_reply);
                     std::cout<< rreg_reply.print() << std::endl;
                     std::cout<< "data length: " << std::to_string(rreg_read_reply.data_length_) << std::endl;
@@ -405,24 +355,156 @@ int main(){
                 XADC_RW xadc_req = decoded_request.get_payload<XADC_RW>();
                 mem_reader xadc_mem_reader(xadc_req.mem_address, xadc_req.mem_register, xadc_req.data_width);
                 xadc_mem_reader.init_mmap();
+                if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_WRITE){
+                    
+                    // iterate over the data vector, writing memory untill data_length
+                    // in this case we KNOW it's 1 byte, at the 1st index.
+
+                    unsigned long xadc_write_data = form_words_longs<XADC_RW>(xadc_req);
+                    /*
+                    if(xadc_req.data_width == WIDTH_BYTE){
+                        xadc_write_data = xadc_req.the_data.at(0);
+                    }
+                    else{
+                        xadc_write_data = form_words_longs(xadc_req);
+                    }
+                    */
+                    unsigned long xadc_write_result = xadc_mem_reader.write_mem(xadc_write_data);
+                    std::cout << "XADC Write : " << std::to_string(xadc_write_result) << std::endl;
+                    xadc_mem_reader.unmap();
+
+                    Fem2ControlMsg xadc_write_reply(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_XADC, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                    XADC_RW xadc_w_reply;
+                    xadc_w_reply.mem_address = xadc_req.mem_address;
+                    xadc_w_reply.mem_register = xadc_req.mem_register;
+                    xadc_w_reply.data_width = xadc_req.data_width;
+                    /*
+                    if(xadc_req.data_width == WIDTH_BYTE){
+                        xadc_w_reply.the_data.push_back((uint8_t)xadc_write_result);
+                    }
+                    else{
+                        get_bytes(xadc_write_result, xadc_w_reply);
+                    }
+                    */
+                    get_bytes<XADC_RW>(xadc_write_result, xadc_w_reply);
+                    xadc_write_reply.set_payload<XADC_RW>(xadc_w_reply);
+                    std::cout<< xadc_w_reply.print() << std::endl;
+                    std::cout<< "data length: " << std::to_string(xadc_write_reply.data_length_) << std::endl;
+                    //encode the fem2controlmsg reply 
+                    encoded_reply = encoder.encode(xadc_write_reply);
+
+                }
+                else if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_READ){
+
+                    unsigned long xadc_r_result = xadc_mem_reader.read_mem();
+                    std::cout << "mem result: " << std::to_string(xadc_r_result) << std::endl;
+                    xadc_mem_reader.unmap();
+
+                    Fem2ControlMsg xadc_read_reply(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_XADC, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                    XADC_RW xadc_reply;
+                    xadc_reply.mem_address = xadc_req.mem_address;
+                    xadc_reply.mem_register = xadc_req.mem_register;
+                    xadc_reply.data_width = xadc_req.data_width;
+
+                    /*
+                    if(xadc_req.data_width == WIDTH_BYTE){
+                        xadc_reply.the_data.push_back((uint8_t)xadc_r_result);
+                    }
+                    else{
+                        get_bytes(xadc_r_result, xadc_reply);
+                    }
+                    */
+                    get_bytes<XADC_RW>(xadc_r_result, xadc_reply);
+                    //rreg_reply.the_data.push_back(rreg_r_result);
+                    xadc_read_reply.set_payload<XADC_RW>(xadc_reply);
+                    std::cout<< xadc_reply.print() << std::endl;
+                    std::cout<< "data length: " << std::to_string(xadc_read_reply.data_length_) << std::endl;
+                            //encode the fem2controlmsg reply 
+                    encoded_reply = encoder.encode(xadc_read_reply);
+
+                }
 
             }//xadc
 
+            else if(decoded_request.get_access_type() == Fem2ControlMsg::ACCESS_QSPI){
+                             
+                QSPI_RW qspi_req = decoded_request.get_payload<QSPI_RW>();
+                mem_reader qspi_mem_reader(qspi_req.mem_address, qspi_req.offset, qspi_req.data_width);
+                qspi_mem_reader.init_mmap();
+                if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_WRITE){
+                    
+                    // iterate over the data vector, writing memory untill data_length
+                    // in this case we KNOW it's 1 byte, at the 1st index.
+
+                    unsigned long qspi_write_data = form_words_longs<QSPI_RW>(qspi_req);
+                    /*
+                    if(xadc_req.data_width == WIDTH_BYTE){
+                        xadc_write_data = xadc_req.the_data.at(0);
+                    }
+                    else{
+                        xadc_write_data = form_words_longs(xadc_req);
+                    }
+                    */
+                    unsigned long qspi_write_result = qspi_mem_reader.write_mem(qspi_write_data);
+                    std::cout << "QSPI Write : " << std::to_string(qspi_write_result) << std::endl;
+                    qspi_mem_reader.unmap();
+
+                    Fem2ControlMsg qspi_write_reply(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_QSPI, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                    QSPI_RW qspi_w_reply;
+                    qspi_w_reply.mem_address = qspi_req.mem_address;
+                    qspi_w_reply.offset = qspi_req.offset;
+                    qspi_w_reply.data_width = qspi_req.data_width;
+                    /*
+                    if(xadc_req.data_width == WIDTH_BYTE){
+                        xadc_w_reply.the_data.push_back((uint8_t)xadc_write_result);
+                    }
+                    else{
+                        get_bytes(xadc_write_result, xadc_w_reply);
+                    }
+                    */
+                    get_bytes<QSPI_RW>(qspi_write_result, qspi_w_reply);
+                    qspi_write_reply.set_payload<QSPI_RW>(qspi_w_reply);
+                    std::cout<< qspi_w_reply.print() << std::endl;
+                    std::cout<< "data length: " << std::to_string(qspi_write_reply.data_length_) << std::endl;
+                    //encode the fem2controlmsg reply 
+                    encoded_reply = encoder.encode(qspi_write_reply);
+
+                }
+                else if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_READ){
+
+                    unsigned long qspi_r_result = qspi_mem_reader.read_mem();
+                    std::cout << "mem result: " << std::to_string(qspi_r_result) << std::endl;
+                    qspi_mem_reader.unmap();
+
+                    Fem2ControlMsg qspi_read_reply(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_QSPI, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                    QSPI_RW qspi_reply;
+                    qspi_reply.mem_address = qspi_req.mem_address;
+                    qspi_reply.offset = qspi_req.offset;
+                    qspi_reply.data_width = qspi_req.data_width;
+
+                    /*
+                    if(xadc_req.data_width == WIDTH_BYTE){
+                        xadc_reply.the_data.push_back((uint8_t)xadc_r_result);
+                    }
+                    else{
+                        get_bytes(xadc_r_result, xadc_reply);
+                    }
+                    */
+                    get_bytes<QSPI_RW>(qspi_r_result, qspi_reply);
+                    //rreg_reply.the_data.push_back(rreg_r_result);
+                    qspi_read_reply.set_payload<QSPI_RW>(qspi_reply);
+                    std::cout<< qspi_reply.print() << std::endl;
+                    std::cout<< "data length: " << std::to_string(qspi_read_reply.data_length_) << std::endl;
+                            //encode the fem2controlmsg reply 
+                    encoded_reply = encoder.encode(qspi_read_reply);
+
+                }
+
+            }//qspi            
+
         } // read-write-config
 
-
-
-
-
-
-
-    /*
-        else{    
-            //encode the fem2controlmsg reply 
-            encoded_reply = encoder.encode(decoded_request);
-        }
-    */
         // send the encoded reply via zmq for comparison
         send(encoded_reply);
-    } //for loop
+    } //for or while loop
 }

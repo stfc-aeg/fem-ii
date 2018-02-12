@@ -104,7 +104,7 @@ class MEM_RW : public PayloadRW{
 
     public:
         uint32_t mem_address;
-        uint32_t page;
+        uint32_t page = 0;
         uint32_t offset;
         MEM_RW(){};
 
