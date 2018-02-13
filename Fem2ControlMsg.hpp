@@ -11,7 +11,7 @@
 #include "boost/bimap.hpp"
 //#include "PayloadStructs.hpp"
 #include "PayloadClasses.hpp"
-
+//#include "data_helpers.hpp"
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -65,24 +65,25 @@ private:
 };// fem2controlmsgexception
 };// femii namespace
 
+
 namespace Femii{
 
     struct bytes{
         uint8_t byte;
     };
 
-    /*
-    *   Struct to hold two bytes in order MSB - > LSB
-    */
+    //
+    //   Struct to hold two bytes in order MSB - > LSB
+    //
     struct word_bytes{
         
         uint8_t byte_lsb;
         uint8_t byte_msb;
     };
 
-    /*
-    *   Struct to hold four bytes in order MSB - > LSB
-    */
+    //
+    //  Struct to hold four bytes in order MSB - > LSB
+    //
     struct long_bytes{
         
         uint8_t byte_lsb;
@@ -91,10 +92,10 @@ namespace Femii{
         uint8_t byte_msb;
     };
 
-    /*
-    *   Converts two bytes into a word (uint16_t)
-    *   Byte params are in order MSB - > LSB
-    */
+    //
+    //   Converts two bytes into a word (uint16_t)
+    //   Byte params are in order MSB - > LSB
+    //
     inline uint16_t from_bytes_to_word(uint8_t MSB, uint8_t LSB){
         
         uint16_t result = 0x0000;
@@ -104,10 +105,10 @@ namespace Femii{
         return result;
     };
 
-    /*
-    *   Converts four bytes into a long (uint32_t)
-    *   Byte params are in order MSB - > LSB
-    */
+    //
+    //   Converts four bytes into a long (uint32_t)
+    //   Byte params are in order MSB - > LSB
+    //
     inline uint32_t from_bytes_to_long(uint8_t MSB, uint8_t byte3, uint8_t byte2, uint8_t LSB){
         
         uint32_t result = 0x00000000;
@@ -115,10 +116,10 @@ namespace Femii{
         return result;
     };
 
-    /*
-    *   Converts a long (uint32_t) into four bytes (uint8_t)
-    *   Returns a long_bytes struct 
-    */
+    //
+    //   Converts a long (uint32_t) into four bytes (uint8_t)
+    //   Returns a long_bytes struct 
+    //
     inline long_bytes from_long_to_bytes(uint32_t data){
         
         printf("long data: %d", data);
@@ -130,10 +131,10 @@ namespace Femii{
         return return_;
     };
 
-    /*
-    *   Converts a word (uint16_t) into two bytes (uint8_t)
-    *   Returns a word_bytes struct 
-    */
+    //
+    //   Converts a word (uint16_t) into two bytes (uint8_t)
+    //   Returns a word_bytes struct 
+    //
     inline word_bytes from_word_to_bytes(uint16_t word){
         printf("word data: %d", word);
         word_bytes return_;

@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include "Fem2ControlMsg.hpp"
+//#include "data_helpers.hpp"
 
 #define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
   __LINE__, __FILE__, errno, strerror(errno)); throw Fem2ControlMsgException("Fatal Error");} while(0)
@@ -22,7 +23,6 @@
 #define MAP_MASK (MAP_SIZE - 1)
 
 using namespace Femii;
-
 
 class mem_reader{
 

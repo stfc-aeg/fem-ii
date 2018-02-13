@@ -3,6 +3,7 @@
 #include "Fem2ControlMsg.hpp"
 #include <cassert>
 #include "MsgPackEncoder.hpp"
+//#include "data_helpers.hpp"
 
 
 #define DDR3_BASE 0x80000000;
@@ -12,6 +13,7 @@
 #define XADC_STATUS 0x43C00000;
 #define QSPI_BASE 0xA0030000;
 #define LED_REGISTER 0xA0020008;
+#define I2C_EEPROM 0x5C;
 
 
 /*
@@ -687,7 +689,42 @@ void test_qspi_read(){
     uint32_t result = form_words_longs<QSPI_RW>(the_qspi_back);
    
     assert(result == 0x000000A5);
-    std::cout << "QSPI MATCH" << std::endl;
+    std::cout << "QSPI READ MATCH" << std::endl;
+}
+
+void test_i2c_read(){
+
+    printf("---------------------------\nTesting I2C Read Trip...\n");
+
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    I2C_RW the_i2c; 
+    the_i2c.i2c_bus = 0;
+    the_i2c.slave_address = I2C_EEPROM;
+    the_i2c.i2c_register = 0xA;
+    the_i2c.data_width = WIDTH_BYTE;//??
+    request.set_payload<I2C_RW>(the_i2c);
+
+    printf("I2C Request: \n");
+    std::cout << request;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request = encoder.encode(request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    printf("QSPI Reply: \n");
+    std::cout << reply;
+
+    I2C_RW the_i2c_back = reply.get_payload<I2C_RW>();
+
+    uint32_t result = form_words_longs<I2C_RW>(the_i2c_back);
+   
+    assert(result == 0x01);
+    std::cout << "I2C READ MATCH" << std::endl;
 }
 
 void led_control(bool on_off){
@@ -761,14 +798,15 @@ int main(){
     test_rawreg_write_read();
     test_xadc_read();
     test_qspi_read();
-
+    test_i2c_read();
+    /*
     while(true){
         led_control(true);
         sleep(1);
         led_control(false);
         sleep(1);
     }
-
+    */
     //led_control(false);
  
 

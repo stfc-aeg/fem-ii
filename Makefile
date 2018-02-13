@@ -10,8 +10,11 @@ fem-ii_server_mac: FemServerTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp
 fem-ii_client_arm: FemClientTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp
 	$(CC_dyn) -std=c++11 -o fem-ii_client_ar FemClientTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp -DMSGPACK_USE_BOOST -I/u/dbu19518/develop/projects/xilinx/target/usr/include -L/u/dbu19518/develop/projects/xilinx/target/usr/lib -lzmq -lboost_date_time
 
-fem-ii_server_arm: FemServerTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp mem_reader.cpp
-	$(CC_dyn) -std=c++11 -o fem-ii_server_arm FemServerTest.cpp Fem2ControlMsg.cpp mem_reader.cpp MsgPackEncoder.cpp -DMSGPACK_USE_BOOST -I/u/dbu19518/develop/projects/xilinx/target/usr/include -L/u/dbu19518/develop/projects/xilinx/target/usr/lib -lzmq -lboost_date_time
+fem-ii_server_arm: FemServerTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp mem_reader.cpp i2c_reader.cpp
+	$(CC_dyn) -std=c++11 -o fem-ii_server_arm FemServerTest.cpp Fem2ControlMsg.cpp mem_reader.cpp i2c_reader.cpp MsgPackEncoder.cpp -DMSGPACK_USE_BOOST -I/u/dbu19518/develop/projects/xilinx/target/usr/include -L/u/dbu19518/develop/projects/xilinx/target/usr/lib -lzmq -lboost_date_time
 
 fem-ii_client_linux: FemClientTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp
 	g++ -std=c++11 -o fem-ii_client_linux FemClientTest.cpp Fem2ControlMsg.cpp MsgPackEncoder.cpp -DMSGPACK_USE_BOOST -I${BOOST_ROOT}/include -I${ZEROMQ_ROOT}/include -I${MSGPACK_ROOT}/include -L${BOOST_ROOT}/lib -L${ZEROMQ_ROOT}/lib -L${MSGPACK_ROOT}/lib -lzmq -lboost_date_time
+
+i2c-test_arm: i2c_reader.cpp i2c_tester.cpp
+	$(CC_dyn) -std=c++11 -o i2c-test_arm i2c_tester.cpp i2c_reader.cpp -I/u/dbu19518/develop/projects/xilinx/target/usr/include -L/u/dbu19518/develop/projects/xilinx/target/usr/lib

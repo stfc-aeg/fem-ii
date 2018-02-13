@@ -44,7 +44,7 @@ class Payload{
 
     public:
 
-        Femii::DataWidth data_width;
+        DataWidth data_width;
         virtual ~Payload(){};
         virtual std::string print() = 0;
 };

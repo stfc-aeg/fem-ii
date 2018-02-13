@@ -4,6 +4,7 @@
 #include <cassert>
 #include "MsgPackEncoder.hpp"
 #include "mem_reader.hpp"
+#include "i2c_reader.hpp"
 
 /*
 Mock Fem Server - uses ZMQ and MsgPack encoding to receive and send a single
@@ -501,7 +502,84 @@ int main(){
                 }
 
             }//qspi            
+            else if(decoded_request.get_access_type() == Fem2ControlMsg::ACCESS_I2C){
+                             
+                I2C_RW i2c_req = decoded_request.get_payload<I2C_RW>();
+                i2c_reader i2c_reader(i2c_req.i2c_bus, i2c_req.slave_address, i2c_req.i2c_register, i2c_req.data_width);
+                i2c_reader.open_bus();
+                i2c_reader.set_slave();
+                if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_WRITE){
+                    
+                    // iterate over the data vector, writing memory untill data_length
+                    // in this case we KNOW it's 1 byte, at the 1st index.
 
+                    unsigned long i2c_write_data = form_words_longs<I2C_RW>(i2c_req);
+                    /*
+                    if(xadc_req.data_width == WIDTH_BYTE){
+                        xadc_write_data = xadc_req.the_data.at(0);
+                    }
+                    else{
+                        xadc_write_data = form_words_longs(xadc_req);
+                    }
+                    */
+                    unsigned long i2c_write_result = i2c_reader.write_byte(i2c_write_data);
+                    std::cout << "I2C Write : " << std::to_string(i2c_write_result) << std::endl;
+                    i2c_reader.close_bus();
+
+                    Fem2ControlMsg i2c_write_reply(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                    I2C_RW i2c_w_reply;
+                    i2c_w_reply.i2c_bus = i2c_req.i2c_bus;
+                    i2c_w_reply.slave_address = i2c_req.slave_address;
+                    i2c_w_reply.i2c_register = i2c_req.i2c_register;                    
+                    i2c_w_reply.data_width = i2c_req.data_width;
+                    /*
+                    if(xadc_req.data_width == WIDTH_BYTE){
+                        xadc_w_reply.the_data.push_back((uint8_t)xadc_write_result);
+                    }
+                    else{
+                        get_bytes(xadc_write_result, xadc_w_reply);
+                    }
+                    */
+                    get_bytes<I2C_RW>(i2c_write_result, i2c_w_reply);
+                    i2c_write_reply.set_payload<I2C_RW>(i2c_w_reply);
+                    std::cout<< i2c_w_reply.print() << std::endl;
+                    std::cout<< "data length: " << std::to_string(i2c_write_reply.data_length_) << std::endl;
+                    //encode the fem2controlmsg reply 
+                    encoded_reply = encoder.encode(i2c_write_reply);
+
+                }
+                else if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_READ){
+
+                    unsigned long i2c_r_result = i2c_reader.read_byte();
+                    std::cout << "i2c result: " << std::to_string(i2c_r_result) << std::endl;
+                    i2c_reader.close_bus();
+
+                    Fem2ControlMsg i2c_read_reply(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK, 0x1234, 10, 0);
+                    I2C_RW i2c_reply;
+                    i2c_reply.i2c_bus = i2c_req.i2c_bus;
+                    i2c_reply.slave_address = i2c_req.slave_address;
+                    i2c_reply.i2c_register = i2c_req.i2c_register;                    
+                    i2c_reply.data_width = i2c_req.data_width;
+
+                    /*
+                    if(xadc_req.data_width == WIDTH_BYTE){
+                        xadc_reply.the_data.push_back((uint8_t)xadc_r_result);
+                    }
+                    else{
+                        get_bytes(xadc_r_result, xadc_reply);
+                    }
+                    */
+                    get_bytes<I2C_RW>(i2c_r_result, i2c_reply);
+                    //rreg_reply.the_data.push_back(rreg_r_result);
+                    i2c_read_reply.set_payload<I2C_RW>(i2c_reply);
+                    std::cout<< i2c_reply.print() << std::endl;
+                    std::cout<< "data length: " << std::to_string(i2c_read_reply.data_length_) << std::endl;
+                            //encode the fem2controlmsg reply 
+                    encoded_reply = encoder.encode(i2c_read_reply);
+
+                }
+
+            }//i2c   
         } // read-write-config
 
         // send the encoded reply via zmq for comparison
