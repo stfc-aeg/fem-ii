@@ -299,6 +299,8 @@ public:
     //  Default Deconstructor
     virtual ~Fem2ControlMsg(){};
 
+    std::string string_payload;
+
     //  Getter methods for the header fields.
     const CommandType get_cmd_type(void) const;
     const AccessType get_access_type(void) const;
@@ -367,7 +369,7 @@ public:
     //template <typename T> void set_payload(T const& the_payload);
 
    //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(I2C_RW const& the_payload){
+    template<typename E> void set_payload(I2C_RW const& the_payload, int size=NULL){
          
        // iterate over integer vector and create a variant
         std::vector<msgpack::type::variant> i2c_rw_vect;
@@ -379,6 +381,7 @@ public:
         
         if (! the_payload.the_data.empty()) //if the data hasn't been populated we don't send the vector.
         {
+            std::cout << "I'm Not Empty" << std::endl;
             for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
             {
                 i2c_rw_vect.push_back(*i);
@@ -386,13 +389,19 @@ public:
         } 
         this->payload = i2c_rw_vect;
         //initialise the data length 
-        this->data_length_ = the_payload.the_data.size();
-      
+        if(size == NULL){
+            this->data_length_ = the_payload.the_data.size();
+        }
+        else{
+            this->data_length_ = size;
+        }
+        // set the string representation of the payload for printing.
+        this->string_payload = the_payload.print(); 
     }
   
 
        //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(MEM_RW const& the_payload){
+    template<typename E> void set_payload(MEM_RW const& the_payload, int size=NULL){
          
        // iterate over integer vector and create a variant
         std::vector<msgpack::type::variant> mem_rw_vect;
@@ -412,12 +421,20 @@ public:
         }
 
         this->payload = mem_rw_vect;
-        //initialise the data length 
-        this->data_length_ = the_payload.the_data.size();
+
+        if(size == NULL){
+            this->data_length_ = the_payload.the_data.size();
+        }
+        else{
+            this->data_length_ = size;
+        }
+        // set the string representation of the payload for printing.
+        this->string_payload = the_payload.print();
+        
     }
 
     //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(Basic_RW const& the_payload){
+    template<typename E> void set_payload(Basic_RW const& the_payload, int size=NULL){
 
        // iterate over integer vector and create a variant
         std::vector<msgpack::type::variant> payload_rw_vect;
@@ -434,8 +451,14 @@ public:
             }
         }
         this->payload = payload_rw_vect;
-        //initialise the data length 
-        this->data_length_ = the_payload.the_data.size();
+        if(size == NULL){
+            this->data_length_ = the_payload.the_data.size();
+        }
+        else{
+            this->data_length_ = size;
+        }
+        // set the string representation of the payload for printing.
+        this->string_payload = the_payload.print();
     }
 
     //Specialisation of the set_payload template for vector<int> not natively supported by msgpack

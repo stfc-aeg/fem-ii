@@ -46,7 +46,7 @@ class Payload{
 
         DataWidth data_width;
         virtual ~Payload(){};
-        virtual std::string print() = 0;
+        virtual std::string print() const = 0;
 };
 
 //--------- Read-Write Payloads -----------//
@@ -68,7 +68,7 @@ class I2C_RW : public PayloadRW{
         uint32_t i2c_register;
         I2C_RW(){};
 
-        std::string print(){
+        std::string print() const{
 
             std::stringstream sstream;
             sstream << "    I2C Bus : 0x" << std::hex << this->i2c_bus << ",\n";
@@ -108,7 +108,7 @@ class MEM_RW : public PayloadRW{
         uint32_t offset;
         MEM_RW(){};
 
-        std::string print(){
+        std::string print() const{
 
             std::stringstream sstream;
             sstream << "    Memory Address : 0x" << std::hex << this->mem_address << ",\n";
@@ -172,7 +172,7 @@ class Basic_RW : public PayloadRW{
         uint32_t mem_register;
         Basic_RW(){};
 
-        std::string print(){
+        std::string print() const{
 
             std::stringstream sstream;
             sstream << "    Memory Address : 0x" << std::hex << this->mem_address << ",\n";

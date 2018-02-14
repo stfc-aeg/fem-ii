@@ -35,10 +35,11 @@ class i2c_reader{
         int open_bus(); 
         void close_bus();
         void set_slave();
-        uint8_t read_byte();
-        int write_byte(uint8_t byte_data);
+        uint8_t read_byte(uint8_t i2c_reg);
+        uint8_t write_byte(uint8_t byte_data, uint8_t i2c_reg=NULL);
+        uint16_t read_word(uint8_t i2c_reg=NULL);
+        uint16_t write_word(uint16_t word_data, uint8_t i2c_reg=NULL);
 
-       
 };
 
 #endif

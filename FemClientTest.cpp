@@ -14,6 +14,7 @@
 #define QSPI_BASE 0xA0030000;
 #define LED_REGISTER 0xA0020008;
 #define I2C_EEPROM 0x5C;
+#define I2C_RTC 0x57;
 
 
 /*
@@ -98,10 +99,10 @@ void test_gpio_encoding(std::vector<uint8_t> const& the_data){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    GPIO_RW the_gpio_back = reply.get_payload<GPIO_RW>();
+    
     printf("GPIO Reply: \n");
     std::cout << reply;
-
-    GPIO_RW the_gpio_back = reply.get_payload<GPIO_RW>();
 
     //assert encoded/decoded round trip msgs and payloads are the same thing
     assert(request == reply);
@@ -141,10 +142,10 @@ void test_xadc_encoding(std::vector<uint8_t> const& the_data){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    XADC_RW the_xadc_back = reply.get_payload<XADC_RW>();
+
     printf("XADC Reply: \n");
     std::cout << reply;
-
-    XADC_RW the_xadc_back = reply.get_payload<XADC_RW>();
 
     //assert encoded/decoded round trip msgs and payloads are the same thing
     assert(request == reply);
@@ -185,10 +186,10 @@ void test_rawreg_encoding(std::vector<uint8_t> const& the_data){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    RAWREG_RW the_rreg_back = reply.get_payload<RAWREG_RW>();
+
     printf("RAWREG Reply: \n");
     std::cout << reply;
-
-    RAWREG_RW the_rreg_back = reply.get_payload<RAWREG_RW>();
 
     //assert encoded/decoded round trip msgs and payloads are the same thing
     assert(request == reply);
@@ -232,10 +233,9 @@ void test_i2c_encoding(std::vector<uint8_t> const& the_data){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    I2C_RW the_i2c_back = reply.get_payload<I2C_RW>();
     printf("I2C Reply: \n");
     std::cout << reply;
-
-    I2C_RW the_i2c_back = reply.get_payload<I2C_RW>();
 
     //assert encoded/decoded round trip msgs and payloads are the same thing
     assert(request == reply);
@@ -277,10 +277,10 @@ void test_qdr_encoding(std::vector<uint8_t> const& the_data){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    QDR_RW the_qdr_back = reply.get_payload<QDR_RW>();
+
     printf("QDR Reply: \n");
     std::cout << reply;
-
-    QDR_RW the_qdr_back = reply.get_payload<QDR_RW>();
 
     //assert encoded/decoded round trip msgs and payloads are the same thing
     assert(request == reply);
@@ -323,10 +323,10 @@ void test_ddr_encoding(std::vector<uint8_t> const& the_data){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    DDR_RW the_ddr_back = reply.get_payload<DDR_RW>();
+
     printf("DDR Reply: \n");
     std::cout << reply;
-
-    DDR_RW the_ddr_back = reply.get_payload<DDR_RW>();
 
     //assert encoded/decoded round trip msgs and payloads are the same thing
     assert(request == reply);
@@ -368,10 +368,10 @@ void test_qspi_encoding(std::vector<uint8_t> const& the_data){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    QSPI_RW the_qspi_back = reply.get_payload<QSPI_RW>();
+
     printf("QSPI Reply: \n");
     std::cout << reply;
-
-    QSPI_RW the_qspi_back = reply.get_payload<QSPI_RW>();
 
     //assert encoded/decoded round trip msgs and payloads are the same thing
     assert(request == reply);
@@ -418,10 +418,10 @@ void test_gpio_write_read(){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_write_reply = receive();
     Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
+    GPIO_RW the_gpio_write_back = write_reply.get_payload<GPIO_RW>();
+
     printf("GPIO WRITE Reply: \n");
     std::cout << write_reply;
-
-    GPIO_RW the_gpio_write_back = write_reply.get_payload<GPIO_RW>();
 
     printf("---------------------------\nReading...\n");
 
@@ -444,10 +444,10 @@ void test_gpio_write_read(){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg read_reply = encoder.decode(encoded_reply);
+    GPIO_RW the_gpio_read_back = read_reply.get_payload<GPIO_RW>();
     printf("GPIO READ Reply: \n");
     std::cout << read_reply;
 
-    GPIO_RW the_gpio_read_back = read_reply.get_payload<GPIO_RW>();
 
     assert(the_gpio_write == the_gpio_read_back);    
  
@@ -501,11 +501,10 @@ void test_ddr_write_read(){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_write_reply = receive();
     Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
-    printf("DDR Reply: \n");
-    std::cout << write_reply;
-
     DDR_RW the_ddr_write_back = write_reply.get_payload<DDR_RW>();
 
+    printf("DDR Reply: \n");
+    std::cout << write_reply;
     printf("---------------------------\nReading...\n");
     
     //initialise a control msg with values.
@@ -516,7 +515,8 @@ void test_ddr_write_read(){
     the_ddr_read.page = 3;
     the_ddr_read.offset = 0x00000000;        //DDR offset address
     the_ddr_read.data_width = WIDTH_LONG;
-    read_request.set_payload<DDR_RW>(the_ddr_read);
+    int data_length = 1; //read 1 long
+    read_request.set_payload<DDR_RW>(the_ddr_read, data_length);
 
     printf("DDR Read Request: \n");
     std::cout << read_request;
@@ -528,10 +528,9 @@ void test_ddr_write_read(){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_read_reply = receive();
     Fem2ControlMsg read_reply = encoder.decode(encoded_read_reply);
+    DDR_RW the_ddr_read_back = read_reply.get_payload<DDR_RW>();
     printf("DDR Read Reply: \n");
     std::cout << read_reply;
-
-    DDR_RW the_ddr_read_back = read_reply.get_payload<DDR_RW>();
 
     assert(the_ddr_write == the_ddr_read_back);    
  
@@ -575,11 +574,10 @@ void test_rawreg_write_read(){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_write_reply = receive();
     Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
-    printf("RAWREG WRITE Reply: \n");
-    std::cout << write_reply;
-
     RAWREG_RW the_rreg_write_back = write_reply.get_payload<RAWREG_RW>();
 
+    printf("RAWREG WRITE Reply: \n");
+    std::cout << write_reply;
     printf("---------------------------\nReading...\n");
 
     //initialise a control msg with values.
@@ -601,10 +599,10 @@ void test_rawreg_write_read(){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg read_reply = encoder.decode(encoded_reply);
+    RAWREG_RW the_rreg_read_back = read_reply.get_payload<RAWREG_RW>();
+
     printf("RAWREG READ Reply: \n");
     std::cout << read_reply;
-
-    RAWREG_RW the_rreg_read_back = read_reply.get_payload<RAWREG_RW>();
 
 
     assert(the_rreg_write == the_rreg_read_back);    
@@ -638,10 +636,10 @@ void test_xadc_read(){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    XADC_RW the_xadc_back = reply.get_payload<XADC_RW>();
+
     printf("XADC Reply: \n");
     std::cout << reply;
-
-    XADC_RW the_xadc_back = reply.get_payload<XADC_RW>();
 
     uint32_t temp = form_words_longs<XADC_RW>(the_xadc_back);
     printf("Temp pre shift : 0x%.2X \n", temp);
@@ -669,7 +667,8 @@ void test_qspi_read(){
     the_qspi.mem_address = QSPI_BASE;
     the_qspi.offset = 0x64;
     the_qspi.data_width = WIDTH_BYTE;//??
-    request.set_payload<QSPI_RW>(the_qspi);
+    int data_length = 1; // the number of bytes to read.
+    request.set_payload<QSPI_RW>(the_qspi, data_length);
 
     printf("QSPI Request: \n");
     std::cout << request;
@@ -681,14 +680,14 @@ void test_qspi_read(){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
-    printf("QSPI Reply: \n");
-    std::cout << reply;
-
     QSPI_RW the_qspi_back = reply.get_payload<QSPI_RW>();
 
+    printf("QSPI Reply: \n");
+    std::cout << reply;
     uint32_t result = form_words_longs<QSPI_RW>(the_qspi_back);
    
     assert(result == 0x000000A5);
+    assert(request.data_length_ == reply.data_length_);
     std::cout << "QSPI READ MATCH" << std::endl;
 }
 
@@ -702,9 +701,10 @@ void test_i2c_read(){
     I2C_RW the_i2c; 
     the_i2c.i2c_bus = 0;
     the_i2c.slave_address = I2C_EEPROM;
-    the_i2c.i2c_register = 0xA;
+    the_i2c.i2c_register = 0x10;
     the_i2c.data_width = WIDTH_BYTE;//??
-    request.set_payload<I2C_RW>(the_i2c);
+    int data_length = 6; // read 6 bytes from the EEPROM i.e the MAC ADDRESS
+    request.set_payload<I2C_RW>(the_i2c, data_length);
 
     printf("I2C Request: \n");
     std::cout << request;
@@ -716,15 +716,18 @@ void test_i2c_read(){
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
     Fem2ControlMsg reply = encoder.decode(encoded_reply);
-    printf("QSPI Reply: \n");
-    std::cout << reply;
 
     I2C_RW the_i2c_back = reply.get_payload<I2C_RW>();
+    printf("I2C Reply: \n");
+    std::cout << reply;
 
+    assert(request.data_length_ == reply.data_length_);
+    /*
     uint32_t result = form_words_longs<I2C_RW>(the_i2c_back);
    
     assert(result == 0x01);
     std::cout << "I2C READ MATCH" << std::endl;
+    */
 }
 
 void led_control(bool on_off){

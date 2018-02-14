@@ -16,7 +16,6 @@ Fem2ControlMsg::Fem2ControlMsg() : header(){
     this->header.timeout_ = -1;
     this->header.retries_ = -1;
 
-
 };
 
 //  Default Fem2ControlMsg constructor with defined field values.
@@ -207,6 +206,8 @@ template <> I2C_RW Fem2ControlMsg::get_payload(){
                 i2c_payload.the_data.push_back(this->get_payload_at<int>(i));
             }
         }
+        // set the string representation of the payload for printing.
+        this->string_payload = i2c_payload.print();
         return i2c_payload; 
     }
     else{
@@ -234,6 +235,8 @@ template <> DDR_RW Fem2ControlMsg::get_payload(){
                 ddr_payload.the_data.push_back(this->get_payload_at<int>(i));
             }
         }
+        // set the string representation of the payload for printing.
+        this->string_payload = ddr_payload.print();
         return ddr_payload; 
     }
     else{
@@ -260,6 +263,8 @@ template <> QDR_RW Fem2ControlMsg::get_payload(){
                 qdr_payload.the_data.push_back(this->get_payload_at<int>(i));
             }
         }
+        // set the string representation of the payload for printing.
+        this->string_payload = qdr_payload.print();
         return qdr_payload; 
     }
     else{
@@ -286,6 +291,8 @@ template <> QSPI_RW Fem2ControlMsg::get_payload(){
                 qspi_payload.the_data.push_back(this->get_payload_at<int>(i));
             }
         }
+        // set the string representation of the payload for printing.
+        this->string_payload = qspi_payload.print();
         return qspi_payload; 
     }
     else{
@@ -310,7 +317,9 @@ template <> GPIO_RW Fem2ControlMsg::get_payload(){
                 //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                 gpio_payload.the_data.push_back(this->get_payload_at<int>(i));
             }
-        }   
+        }
+        // set the string representation of the payload for printing.
+        this->string_payload = gpio_payload.print();   
         return gpio_payload; 
     }
     else{
@@ -334,14 +343,15 @@ template <> XADC_RW Fem2ControlMsg::get_payload(){
                 //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                 xadc_payload.the_data.push_back(this->get_payload_at<int>(i));
             }
-        }   
+        }
+        // set the string representation of the payload for printing.
+        this->string_payload = xadc_payload.print();   
         return xadc_payload; 
     }
     else{
         throw Fem2ControlMsgException("Payload Is Not XADC Type");
     }
 }
-
 
 template <> RAWREG_RW Fem2ControlMsg::get_payload(){
 
@@ -359,7 +369,9 @@ template <> RAWREG_RW Fem2ControlMsg::get_payload(){
                 //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                 rreg_payload.the_data.push_back(this->get_payload_at<int>(i));
             }
-        }   
+        }
+        // set the string representation of the payload for printing.
+        this->string_payload = rreg_payload.print();     
         return rreg_payload; 
     }
     else{
@@ -367,47 +379,6 @@ template <> RAWREG_RW Fem2ControlMsg::get_payload(){
     }
 }
 
-/*
- //these do not work.
-template <> Basic_RW Fem2ControlMsg::get_payload(){
-
-    int offset; // offset for start of the data
-    
-        std::cout << "getting GPIO payload" << std::endl;
-        Basic_RW this_payload;
-        this_payload.mem_address = this->get_payload_at<int>(0);
-        this_payload.mem_register = this->get_payload_at<int>(1);
-        this_payload.data_width = this->get_payload_at<DataWidth>(2);
-            
-        offset = 3;
-        // guard for read sends 
-        for(int i=offset; i < (this->data_length_ + offset); i++){
-            //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-            this_payload.the_data.push_back(this->get_payload_at<int>(i));
-        }   
-        return this_payload; 
-}
-
-template <> MEM_RW Fem2ControlMsg::get_payload(){
-
-    int offset; // offset for start of the data
-  
-    MEM_RW mem_payload;
-    mem_payload.mem_address = this->get_payload_at<int>(0);
-    mem_payload.page = this->get_payload_at<int>(1);
-    mem_payload.offset = this->get_payload_at<int>(2);
-    mem_payload.data_width = this->get_payload_at<DataWidth>(3);
-            
-    offset = 4;
-    //std::cout << "get length: " << std::to_string(this->data_length_) << std::endl;
-    /// guard for read sends 
-    for(int i=offset; i < (this->data_length_ + offset); i++){
-        //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
-        mem_payload.the_data.push_back(this->get_payload_at<int>(i));
-    }
-    return mem_payload; 
-}
-*/
 
 //  TODO Validation/ Exceptions?
 std::string Fem2ControlMsg::print(){
@@ -444,40 +415,13 @@ std::string Fem2ControlMsg::print(){
     output += "    Timestamp : " + get_string_timestamp() + ",\n}\n";
     output += "PAYLOAD : {\n";
     
-    // test by type of message -> cmd_notify only in for testing.
-    if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_I2C){
-        I2C_RW printout = this->get_payload<I2C_RW>(); // object creation - deletion fix
-        output += printout.print();
-    }
-    
-    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_GPIO){
-        GPIO_RW printout = this->get_payload<GPIO_RW>(); // object creation - deletion fix
-        output += printout.print();
-    }
-    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_XADC){
-        XADC_RW printout = this->get_payload<XADC_RW>(); // object creation - deletion fix
-        output += printout.print();
-    }
-    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_RAWREG){
-        RAWREG_RW printout = this->get_payload<RAWREG_RW>(); // object creation - deletion fix
-        output += printout.print();
-    }
-    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_QDR){
-        QDR_RW printout = this->get_payload<QDR_RW>(); // object creation - deletion fix
-        output += printout.print();
-    }
-    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_DDR){
-        DDR_RW printout = this->get_payload<DDR_RW>(); // object creation - deletion fix
-        output += printout.print();
-    }
-    else if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_QSPI){
-        QSPI_RW printout = this->get_payload<QSPI_RW>(); // object creation - deletion fix
-        output += printout.print();
+    if(this->string_payload == ""){
+        throw Fem2ControlMsgException("Payload has not been initialised, use get_payload<> before printing.");
     }
     else{
-        throw Fem2ControlMsgException("Unrecognised Payload Type");
+        output += this->string_payload;
     }
-    
+
     output += "\n}\n";
     return output;
 }
