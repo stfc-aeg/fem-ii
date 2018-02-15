@@ -158,14 +158,12 @@ namespace Femii{
 
             case WIDTH_BYTE:
                 {
-                    std::cout << "result: " << (uint8_t)result << std::endl;
                     the_payload.the_data.push_back((uint8_t)result);
                     break;
                 }
 
             case WIDTH_WORD:
                 {
-                    std::cout << "result: " << (uint16_t)result << std::endl;
                     word_bytes the_bytes = from_word_to_bytes((uint16_t)result);
                     the_payload.the_data.push_back(the_bytes.byte_lsb);
                     the_payload.the_data.push_back(the_bytes.byte_msb);
@@ -173,7 +171,6 @@ namespace Femii{
                 }
             case WIDTH_LONG:
                 {
-                    std::cout << "result: " << (uint32_t)result << std::endl;
                     long_bytes the_long_bytes = from_long_to_bytes((uint32_t)result);
                     the_payload.the_data.push_back(the_long_bytes.byte_lsb);
                     the_payload.the_data.push_back(the_long_bytes.byte2);
@@ -187,7 +184,7 @@ namespace Femii{
         }
     }
 
-    template <typename T> uint32_t form_words_longs(T &the_payload){
+    template <typename T> uint32_t form_words_longs(T &the_payload, int index){
 
         uint32_t result;
 
@@ -198,7 +195,7 @@ namespace Femii{
                     printf("I'm bytes\n");
                     std::cout << the_payload.print() << std::endl;
                     std::cout << "size = " << the_payload.the_data.size() << std::endl;
-                    result = the_payload.the_data.at(0);
+                    result = the_payload.the_data.at(index); // for bytes its just every index.
                     break;
                 }
             case WIDTH_WORD:
@@ -206,17 +203,15 @@ namespace Femii{
                     printf("I'm Words\n");
                     std::cout << the_payload.print() << std::endl;
                     std::cout << "size = " << the_payload.the_data.size() << std::endl;
-                    uint16_t word_data = from_bytes_to_word(the_payload.the_data.at(1), the_payload.the_data.at(0));
+                    uint16_t word_data = from_bytes_to_word(the_payload.the_data.at(index + 1), the_payload.the_data.at(index));
                     result = word_data;
-                    //result = ddr_memory_reader.write_mem(word_data);
                     break;
                 }
             case WIDTH_LONG:
                 {
                     std::cout << "size = " << the_payload.the_data.size() << std::endl;
-                    uint32_t long_data = from_bytes_to_long(the_payload.the_data.at(3), the_payload.the_data.at(2), the_payload.the_data.at(1), the_payload.the_data.at(0));
+                    uint32_t long_data = from_bytes_to_long(the_payload.the_data.at(index + 3), the_payload.the_data.at(index + 2), the_payload.the_data.at(index + 1), the_payload.the_data.at(index));
                     result = long_data;
-                    //result = ddr_memory_reader.write_mem(long_data);
                     break;
                 }
             default:
@@ -369,7 +364,7 @@ public:
     //template <typename T> void set_payload(T const& the_payload);
 
    //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(I2C_RW const& the_payload, int size=NULL){
+    template<typename E> void set_payload(I2C_RW const& the_payload, int size=-1){
          
        // iterate over integer vector and create a variant
         std::vector<msgpack::type::variant> i2c_rw_vect;
@@ -389,7 +384,7 @@ public:
         } 
         this->payload = i2c_rw_vect;
         //initialise the data length 
-        if(size == NULL){
+        if(size == -1){
             this->data_length_ = the_payload.the_data.size();
         }
         else{
@@ -401,7 +396,7 @@ public:
   
 
        //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(MEM_RW const& the_payload, int size=NULL){
+    template<typename E> void set_payload(MEM_RW const& the_payload, int size=-1){
          
        // iterate over integer vector and create a variant
         std::vector<msgpack::type::variant> mem_rw_vect;
@@ -422,19 +417,20 @@ public:
 
         this->payload = mem_rw_vect;
 
-        if(size == NULL){
+        if(size == -1){
             this->data_length_ = the_payload.the_data.size();
         }
         else{
             this->data_length_ = size;
         }
+        
         // set the string representation of the payload for printing.
         this->string_payload = the_payload.print();
         
     }
 
     //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(Basic_RW const& the_payload, int size=NULL){
+    template<typename E> void set_payload(Basic_RW const& the_payload, int size=-1){
 
        // iterate over integer vector and create a variant
         std::vector<msgpack::type::variant> payload_rw_vect;
@@ -451,12 +447,13 @@ public:
             }
         }
         this->payload = payload_rw_vect;
-        if(size == NULL){
+        if(size == -1){
             this->data_length_ = the_payload.the_data.size();
         }
         else{
             this->data_length_ = size;
         }
+        
         // set the string representation of the payload for printing.
         this->string_payload = the_payload.print();
     }

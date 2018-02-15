@@ -44,9 +44,9 @@ void i2c_reader::set_slave()
     }
 }
 
-uint8_t i2c_reader::read_byte(uint8_t i2c_reg)
+uint8_t i2c_reader::read_byte(int i2c_reg)
 {
-    if (i2c_reg== NULL){
+    if (i2c_reg== -1){
         i2c_reg = this->i2c_register;
     }
     int byte_data = i2c_smbus_read_byte_data(this->i2c_bus_handle, i2c_reg);
@@ -59,9 +59,9 @@ uint8_t i2c_reader::read_byte(uint8_t i2c_reg)
     return byte_data;
 }
 
-uint8_t i2c_reader::write_byte(uint8_t byte_data, uint8_t i2c_reg)
+uint8_t i2c_reader::write_byte(uint8_t byte_data, int i2c_reg)
 {
-    if (i2c_reg== NULL){
+    if (i2c_reg== -1){
         i2c_reg = this->i2c_register;
     }
     int write_data = i2c_smbus_write_byte_data(this->i2c_bus_handle, i2c_reg, byte_data);
@@ -74,9 +74,9 @@ uint8_t i2c_reader::write_byte(uint8_t byte_data, uint8_t i2c_reg)
     return write_data;
 }
 
-uint16_t i2c_reader::read_word(uint8_t i2c_reg)
+uint16_t i2c_reader::read_word(int i2c_reg)
 {
-    if (i2c_reg== NULL){
+    if (i2c_reg== -1){
         i2c_reg = this->i2c_register;
     }    
     int word_data = i2c_smbus_read_word_data(this->i2c_bus_handle, i2c_reg);
@@ -89,9 +89,9 @@ uint16_t i2c_reader::read_word(uint8_t i2c_reg)
     return word_data;
 }
 
-uint16_t i2c_reader::write_word(uint16_t word_data, uint8_t i2c_reg)
+uint16_t i2c_reader::write_word(uint16_t word_data, int i2c_reg)
 {
-    if (i2c_reg== NULL){
+    if (i2c_reg== -1){
         i2c_reg = this->i2c_register;
     }
     int write_data = i2c_smbus_write_word_data(this->i2c_bus_handle, i2c_reg, word_data);
@@ -104,3 +104,4 @@ uint16_t i2c_reader::write_word(uint16_t word_data, uint8_t i2c_reg)
     }
     return write_data;
 }
+ 

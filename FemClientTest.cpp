@@ -432,7 +432,7 @@ void test_gpio_write_read(){
     the_gpio_read.mem_address = GPIO_DDR3_PAGE;
     the_gpio_read.mem_register = 0;
     the_gpio_read.data_width = WIDTH_BYTE;
-    read_request.set_payload<GPIO_RW>(the_gpio_read);
+    read_request.set_payload<GPIO_RW>(the_gpio_read, 1);
 
     printf("GPIO Request: \n");
     std::cout << read_request;
@@ -488,6 +488,7 @@ void test_ddr_write_read(){
     the_ddr_write.the_data.push_back(0xCC); 
     the_ddr_write.the_data.push_back(0xDD);
    
+
     the_ddr_write.data_width = WIDTH_LONG;
     write_request.set_payload<DDR_RW>(the_ddr_write);
 
@@ -564,7 +565,7 @@ void test_rawreg_write_read(){
     the_rreg_write.the_data.push_back(0x02);
     write_request.set_payload<RAWREG_RW>(the_rreg_write);
 
-    printf("GPIO Write Request: \n");
+    printf("RAWREG Write Request: \n");
     std::cout << write_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
@@ -587,7 +588,7 @@ void test_rawreg_write_read(){
     the_rreg_read.mem_address = BRAM_CONFIG;
     the_rreg_read.mem_register = 0;
     the_rreg_read.data_width = WIDTH_WORD;
-    read_request.set_payload<RAWREG_RW>(the_rreg_read);
+    read_request.set_payload<RAWREG_RW>(the_rreg_read, 1);
 
     printf("RAWREG Request: \n");
     std::cout << read_request;
@@ -624,7 +625,7 @@ void test_xadc_read(){
     the_xadc.mem_address = XADC_STATUS;
     the_xadc.mem_register = 0x200;
     the_xadc.data_width = WIDTH_WORD;//??
-    request.set_payload<XADC_RW>(the_xadc);
+    request.set_payload<XADC_RW>(the_xadc, 1);
 
     printf("XADC Request: \n");
     std::cout << request;
@@ -641,7 +642,7 @@ void test_xadc_read(){
     printf("XADC Reply: \n");
     std::cout << reply;
 
-    uint32_t temp = form_words_longs<XADC_RW>(the_xadc_back);
+    uint32_t temp = form_words_longs<XADC_RW>(the_xadc_back, 0);
     printf("Temp pre shift : 0x%.2X \n", temp);
     temp = temp >> 4;
     temp = ((temp * 503.975)/ 4096) - 273.15;
@@ -684,7 +685,7 @@ void test_qspi_read(){
 
     printf("QSPI Reply: \n");
     std::cout << reply;
-    uint32_t result = form_words_longs<QSPI_RW>(the_qspi_back);
+    uint32_t result = form_words_longs<QSPI_RW>(the_qspi_back, 0); // this is just taking the first byte.
    
     assert(result == 0x000000A5);
     assert(request.data_length_ == reply.data_length_);
@@ -739,7 +740,7 @@ void led_control(bool on_off){
     else{
         on_off_string = "off";
     }
-    printf("---------------------------\Turning Both LED's %s...\n", on_off_string.c_str());
+    printf("---------------------------\nTurning Both LED's %s...\n", on_off_string.c_str());
 
     //initialise a control msg with values.
     Fem2ControlMsg write_request(Fem2ControlMsg::CMD_WRITE, Fem2ControlMsg::ACCESS_GPIO, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
