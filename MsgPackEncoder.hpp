@@ -16,9 +16,10 @@ public:
 
     virtual ~MsgPackEncoder(){};
 
-    const std::string encode(Fem2ControlMsg the_msg);
+    void encode(Fem2ControlMsg& the_msg, std::string& string_msg);
 
-    const Fem2ControlMsg decode(std::string the_msg);
+    void decode(std::string& the_msg, Fem2ControlMsg& decoded_msg);
+
 
 };
 

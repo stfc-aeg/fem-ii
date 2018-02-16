@@ -388,15 +388,18 @@ int main(){
         print_as_python_bytes(encoded_request);
 
         //  decode the message into a fem2controlmsg using encoder
-        Fem2ControlMsg decoded_request = encoder.decode(encoded_request);
+        Fem2ControlMsg decoded_request;
+        
+        encoder.decode(encoded_request, decoded_request);
+
         std::string encoded_reply;
 
         // CMD_NOTIFY == just testing round trip encoding
         if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_NOTIFY){
 
             //encode the fem2controlmsg reply directly for encoding comparison.
-            encoded_reply = encoder.encode(decoded_request);
-
+            //encoded_reply = encoder.encode(decoded_request);
+            encoder.encode(decoded_request, encoded_reply);
         }
 
         else{ //testing read-write-config
@@ -434,7 +437,9 @@ int main(){
                         std::cout << "Fem2ControlMsg Error: " << e.what() << std::endl;
                         write_reply.set_ack_state(Fem2ControlMsg::NACK);  
                     }
-                    encoded_reply = encoder.encode(write_reply);
+                    //encoded_reply = encoder.encode(write_reply);
+                    encoder.encode(write_reply, encoded_reply);
+
                 } // ddr-write
 
                 else if(decoded_request.get_cmd_type() == Femii::Fem2ControlMsg::CMD_READ)
@@ -451,7 +456,9 @@ int main(){
                         std::cout << "Fem2ControlMsg Error: " << e.what() << std::endl;
                         read_reply.set_ack_state(Fem2ControlMsg::NACK);
                     }
-                    encoded_reply = encoder.encode(read_reply);
+                    //encoded_reply = encoder.encode(read_reply);
+                    encoder.encode(read_reply, encoded_reply);
+
                         
                 } // ddr-read
             } // ddr
@@ -476,8 +483,9 @@ int main(){
                         std::cout << "Fem2ControlMsg Error: " << e.what() << std::endl;
                         gpio_write_reply.set_ack_state(Fem2ControlMsg::NACK);
                     }
-                    encoded_reply = encoder.encode(gpio_write_reply);
-                    
+                    //encoded_reply = encoder.encode(gpio_write_reply);
+                    encoder.encode(gpio_write_reply, encoded_reply);
+
                 } //gpio write
 
                 else if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_READ)
@@ -495,7 +503,9 @@ int main(){
                         gpio_read_reply.set_ack_state(Fem2ControlMsg::NACK);
                     }
 
-                    encoded_reply = encoder.encode(gpio_read_reply);
+                    //encoded_reply = encoder.encode(gpio_read_reply);
+                    encoder.encode(gpio_read_reply, encoded_reply);
+
 
                 } // gpio-read
             } // gpio
@@ -520,7 +530,8 @@ int main(){
                         std::cout << "Fem2ControlMsg Error: " << e.what() << std::endl;
                         rreg_write_reply.set_ack_state(Fem2ControlMsg::NACK);
                     }
-                    encoded_reply = encoder.encode(rreg_write_reply);
+                    //encoded_reply = encoder.encode(rreg_write_reply);
+                    encoder.encode(rreg_write_reply, encoded_reply);
 
                 }
 
@@ -539,7 +550,9 @@ int main(){
                         rreg_read_reply.set_ack_state(Fem2ControlMsg::NACK);
                     }
 
-                    encoded_reply = encoder.encode(rreg_read_reply);
+                    //encoded_reply = encoder.encode(rreg_read_reply);
+                    encoder.encode(rreg_read_reply, encoded_reply);
+
                 }
             }  // raw-reg
 
@@ -564,9 +577,11 @@ int main(){
                         std::cout << "Fem2ControlMsg Error: " << e.what() << std::endl;
                         xadc_write_reply.set_ack_state(Fem2ControlMsg::NACK);
                     }
-                    encoded_reply = encoder.encode(xadc_write_reply);
 
+                    //encoded_reply = encoder.encode(xadc_write_reply);
+                    encoder.encode(xadc_write_reply, encoded_reply);
                 }
+
                 else if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_READ)
                 {
 
@@ -582,7 +597,8 @@ int main(){
                         xadc_read_reply.set_ack_state(Fem2ControlMsg::NACK);
                     }
                     
-                    encoded_reply = encoder.encode(xadc_read_reply);
+                    //encoded_reply = encoder.encode(xadc_read_reply);
+                    encoder.encode(xadc_read_reply, encoded_reply);
 
                 }
 
@@ -608,7 +624,8 @@ int main(){
                         std::cout << "Fem2ControlMsg Error: " << e.what() << std::endl;
                         qspi_write_reply.set_ack_state(Fem2ControlMsg::NACK);                        
                     }
-                    encoded_reply = encoder.encode(qspi_write_reply);
+                    //encoded_reply = encoder.encode(qspi_write_reply);
+                    encoder.encode(qspi_write_reply, encoded_reply);
 
                 }
 
@@ -624,7 +641,8 @@ int main(){
                         std::cout << "Fem2ControlMsg Error: " << e.what() << std::endl;
                         qspi_read_reply.set_ack_state(Fem2ControlMsg::NACK);                        
                     } 
-                    encoded_reply = encoder.encode(qspi_read_reply);
+                    //encoded_reply = encoder.encode(qspi_read_reply);
+                    encoder.encode(qspi_read_reply, encoded_reply);
                 }
             }//qspi    
 
@@ -650,7 +668,10 @@ int main(){
                         std::cout << "Fem2ControlMsg Error: " << e.what() << std::endl;
                         i2c_write_reply.set_ack_state(Fem2ControlMsg::NACK);                        
                     }
-                    encoded_reply = encoder.encode(i2c_write_reply);
+
+                    //encoded_reply = encoder.encode(i2c_write_reply);
+                    encoder.encode(i2c_write_reply, encoded_reply);
+
 
                 }
 
@@ -667,7 +688,8 @@ int main(){
                         std::cout << "Fem2ControlMsg Error: " << e.what() << std::endl;
                         i2c_read_reply.set_ack_state(Fem2ControlMsg::NACK);                        
                     }
-                    encoded_reply = encoder.encode(i2c_read_reply);
+                    //encoded_reply = encoder.encode(i2c_read_reply);
+                    encoder.encode(i2c_read_reply, encoded_reply);
                 }
             }//i2c   
         } // read-write-config

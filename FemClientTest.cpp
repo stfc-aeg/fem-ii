@@ -93,12 +93,16 @@ void test_gpio_encoding(std::vector<uint8_t> const& the_data){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
+
     GPIO_RW the_gpio_back = reply.get_payload<GPIO_RW>();
     
     printf("GPIO Reply: \n");
@@ -136,12 +140,16 @@ void test_xadc_encoding(std::vector<uint8_t> const& the_data){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
+
     XADC_RW the_xadc_back = reply.get_payload<XADC_RW>();
 
     printf("XADC Reply: \n");
@@ -180,12 +188,16 @@ void test_rawreg_encoding(std::vector<uint8_t> const& the_data){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
+
     RAWREG_RW the_rreg_back = reply.get_payload<RAWREG_RW>();
 
     printf("RAWREG Reply: \n");
@@ -227,12 +239,15 @@ void test_i2c_encoding(std::vector<uint8_t> const& the_data){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
     I2C_RW the_i2c_back = reply.get_payload<I2C_RW>();
     printf("I2C Reply: \n");
     std::cout << reply;
@@ -271,12 +286,17 @@ void test_qdr_encoding(std::vector<uint8_t> const& the_data){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
+
+
     QDR_RW the_qdr_back = reply.get_payload<QDR_RW>();
 
     printf("QDR Reply: \n");
@@ -317,12 +337,16 @@ void test_ddr_encoding(std::vector<uint8_t> const& the_data){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
+
     DDR_RW the_ddr_back = reply.get_payload<DDR_RW>();
 
     printf("DDR Reply: \n");
@@ -362,12 +386,16 @@ void test_qspi_encoding(std::vector<uint8_t> const& the_data){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
+
     QSPI_RW the_qspi_back = reply.get_payload<QSPI_RW>();
 
     printf("QSPI Reply: \n");
@@ -405,19 +433,24 @@ void test_gpio_write_read(){
     the_gpio_write.mem_register = 0;
     the_gpio_write.data_width = WIDTH_BYTE;
     the_gpio_write.the_data.push_back(0x05);
-            //DDR offset address
     write_request.set_payload<GPIO_RW>(the_gpio_write);
 
     printf("GPIO Write Request: \n");
     std::cout << write_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_write_request = encoder.encode(write_request);
+    std::string encoded_write_request;
+    encoder.encode(write_request, encoded_write_request);
     send(encoded_write_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_write_reply = receive();
-    Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
+    Fem2ControlMsg write_reply;
+    encoder.decode(encoded_write_reply, write_reply);
+
+
+
+
     GPIO_RW the_gpio_write_back = write_reply.get_payload<GPIO_RW>();
 
     printf("GPIO WRITE Reply: \n");
@@ -438,12 +471,17 @@ void test_gpio_write_read(){
     std::cout << read_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(read_request);
+    std::string encoded_request;
+    encoder.encode(read_request, encoded_request);
+
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg read_reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg read_reply;
+    encoder.decode(encoded_reply, read_reply);
+
+
     GPIO_RW the_gpio_read_back = read_reply.get_payload<GPIO_RW>();
     printf("GPIO READ Reply: \n");
     std::cout << read_reply;
@@ -496,12 +534,16 @@ void test_ddr_write_read(){
     std::cout << write_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_write_request = encoder.encode(write_request);
+    std::string encoded_write_request;
+    encoder.encode(write_request, encoded_write_request);
     send(encoded_write_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_write_reply = receive();
-    Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
+    Fem2ControlMsg write_reply;
+    encoder.decode(encoded_write_reply, write_reply);
+
+
     DDR_RW the_ddr_write_back = write_reply.get_payload<DDR_RW>();
 
     printf("DDR Reply: \n");
@@ -523,12 +565,16 @@ void test_ddr_write_read(){
     std::cout << read_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_read_request = encoder.encode(read_request);
+    std::string encoded_read_request;
+    encoder.encode(read_request, encoded_read_request);
     send(encoded_read_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_read_reply = receive();
-    Fem2ControlMsg read_reply = encoder.decode(encoded_read_reply);
+    Fem2ControlMsg read_reply;
+    encoder.decode(encoded_read_reply, read_reply);
+
+
     DDR_RW the_ddr_read_back = read_reply.get_payload<DDR_RW>();
     printf("DDR Read Reply: \n");
     std::cout << read_reply;
@@ -569,12 +615,16 @@ void test_rawreg_write_read(){
     std::cout << write_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_write_request = encoder.encode(write_request);
+    std::string encoded_write_request;
+    encoder.encode(write_request, encoded_write_request);
     send(encoded_write_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_write_reply = receive();
-    Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
+    Fem2ControlMsg write_reply;
+    encoder.decode(encoded_write_reply, write_reply);
+
+
     RAWREG_RW the_rreg_write_back = write_reply.get_payload<RAWREG_RW>();
 
     printf("RAWREG WRITE Reply: \n");
@@ -594,12 +644,15 @@ void test_rawreg_write_read(){
     std::cout << read_request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(read_request);
+    std::string encoded_request;
+    encoder.encode(read_request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg read_reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg read_reply;
+    encoder.decode(encoded_reply, read_reply);
+
     RAWREG_RW the_rreg_read_back = read_reply.get_payload<RAWREG_RW>();
 
     printf("RAWREG READ Reply: \n");
@@ -631,12 +684,17 @@ void test_xadc_read(){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
+
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
+
     XADC_RW the_xadc_back = reply.get_payload<XADC_RW>();
 
     printf("XADC Reply: \n");
@@ -675,12 +733,16 @@ void test_qspi_read(){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
+
     QSPI_RW the_qspi_back = reply.get_payload<QSPI_RW>();
 
     printf("QSPI Reply: \n");
@@ -711,12 +773,15 @@ void test_i2c_read(){
     std::cout << request;
 
     //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_request = encoder.encode(request);
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
     send(encoded_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_reply = receive();
-    Fem2ControlMsg reply = encoder.decode(encoded_reply);
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
 
     I2C_RW the_i2c_back = reply.get_payload<I2C_RW>();
     printf("I2C Reply: \n");
@@ -762,13 +827,19 @@ void led_control(bool on_off){
     printf("GPIO Write Request: \n");
     std::cout << write_request;
 
-    //  encode the fem2controlmsg as a string (byte string) and send
-    std::string encoded_write_request = encoder.encode(write_request);
+    //  encode the fem2controlmsg as a string (byte string) and send    
+    std::string encoded_write_request;
+    encoder.encode(write_request, encoded_write_request);
     send(encoded_write_request);
 
     //receive reply from server via zmq and decode into Fem2ControlMsg
     std::string encoded_write_reply = receive();
-    Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
+
+    //Fem2ControlMsg write_reply = encoder.decode(encoded_write_reply);
+    Fem2ControlMsg write_reply;
+    encoder.decode(encoded_write_reply, write_reply);
+
+
     printf("GPIO WRITE Reply: \n");
     std::cout << write_reply;
 
