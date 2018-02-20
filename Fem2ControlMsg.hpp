@@ -455,6 +455,39 @@ public:
         }
         
         // set the string representation of the payload for printing.
+        this->string_payload = the_payload.print(); 
+    }
+
+        //Specialisation of the set_payload template for I2C_CONFIG payloads not natively supported by msgpack
+    template<typename E> void set_payload(I2C_CONFIG const& the_payload){
+
+       // iterate over integer vector and create a variant
+        std::map<msgpack::type::variant, msgpack::type::variant> payload_config_map;
+        payload_config_map["i2c_bus"] = the_payload.i2c_bus;
+        payload_config_map["i2c_register"] = the_payload.i2c_register;
+        payload_config_map["slave_address"] = the_payload.slave_address;
+        payload_config_map["data_width"] = static_cast<int>(the_payload.data_width);
+
+        // boost optional parameters hold true if they contain a value, then you deference the value it points to.
+        if(the_payload.unsigned_int_param){
+             payload_config_map["unsigned_int_param"] = *(the_payload.unsigned_int_param);
+        }
+        if(the_payload.signed_int_param){
+             payload_config_map["signed_int_param"] = *(the_payload.signed_int_param);
+        }
+        if(the_payload.float_param){
+             payload_config_map["float_param"] = *(the_payload.float_param);
+        }
+        if(the_payload.string_param){
+             payload_config_map["string_param"] = *(the_payload.string_param);
+        }
+        if(the_payload.char_param){
+             payload_config_map["char_param"] = *(the_payload.char_param);
+        }      
+
+        this->payload = payload_config_map;
+        
+        // set the string representation of the payload for printing.
         this->string_payload = the_payload.print();
     }
 
@@ -514,7 +547,23 @@ public:
         }
 
     }
-
+    
+    //To be used in getting data values in vector payloads
+    template <typename T> T get_param_at(std::string const& name)
+    {
+        //should test for vector.
+        
+            std::map<msgpack::type::variant, msgpack::type::variant> test = this->payload.as_map();
+            std::map<msgpack::type::variant, msgpack::type::variant>::iterator it; 
+            it = test.find(name);
+            if (it != test.end()) {
+                return get_value<T>(it->second);
+            }
+            else{
+                throw Fem2ControlMsgException("Parameter Name Not Found");
+            }
+     
+    }
     //to be used in getting data values in vector payloads
     template <typename T> T get_value(msgpack::type::variant const& value);
 

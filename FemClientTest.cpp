@@ -847,6 +847,33 @@ void led_control(bool on_off){
 
 }
 
+void test_init_config(){
+
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_CONFIGURE, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    
+    I2C_CONFIG i2c_config; 
+    i2c_config.i2c_bus = 0x0;
+    i2c_config.i2c_register = 0xA;
+    i2c_config.slave_address = 0x5C;
+    i2c_config.data_width = WIDTH_BYTE;
+    i2c_config.unsigned_int_param = 123456;
+    i2c_config.signed_int_param = -1;
+    i2c_config.float_param = 0.05;
+    i2c_config.string_param = "hello";
+    i2c_config.char_param = 'c';
+    request.set_payload<I2C_CONFIG>(i2c_config);
+    std::cout << "Configuration Pre-Encoding:\n" << request << std::endl;
+
+
+    I2C_CONFIG config_back = request.get_payload<I2C_CONFIG>();
+    Fem2ControlMsg reply(Fem2ControlMsg::CMD_CONFIGURE, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    reply.set_payload<I2C_CONFIG>(config_back);
+
+    std::cout << "Configuration Decoded:\n" << reply;
+    //assert(request == reply);
+    assert(i2c_config == config_back);
+}
+
 
 int main(){
 
@@ -859,6 +886,9 @@ int main(){
     for(uint8_t i =0; i < 20; i++){
         this_data.push_back(i);
     }
+
+    test_init_config();
+    
 
     test_gpio_encoding(this_data);
     test_i2c_encoding(this_data);
@@ -874,6 +904,8 @@ int main(){
     test_xadc_read();
     test_qspi_read();
     test_i2c_read();
+
+    
     /*
     while(true){
         led_control(true);

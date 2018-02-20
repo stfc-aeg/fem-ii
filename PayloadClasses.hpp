@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <vector>
 #include "Fem2ControlMsg.hpp"
+#include <boost/optional.hpp>
+
 
 namespace Femii{
 
@@ -228,27 +230,87 @@ class RAWREG_RW : public Basic_RW{
 
 //--------- Config Payloads -----------//
 
+/*
 class PayloadConf : public Payload{
+    
+    public: 
+        //std::vector<uint8_t> the_data;
+        virtual ~Payload(){};
+};
+*/
+
+class I2C_CONFIG : public Payload{
+
+    public:
+
+        uint32_t i2c_bus;
+        uint32_t slave_address;
+        uint32_t i2c_register;
+        //std::map<std::string, msgpack::type::variant> param_block;
+
+        // boost optional allows quick checking if parameters have been initialised.
+        boost::optional <uint64_t> unsigned_int_param; 
+        boost::optional <int> signed_int_param;
+        boost::optional <float> float_param;
+        boost::optional <std::string> string_param; 
+        boost::optional <char> char_param;
+
+        I2C_CONFIG(){};
+
+        std::string print() const{
+
+            std::stringstream sstream;
+            sstream << "    I2C Bus : 0x" << std::hex << this->i2c_bus << ",\n";
+            sstream << "    I2C Slave Address : 0x" << std::hex << this->slave_address << ",\n";
+            sstream << "    I2C Register : 0x" << std::hex << this->i2c_register << ",\n";
+            sstream << "    Data Width : " << init_data_width_map(this->data_width) <<  ",\n";
+
+            if(this->unsigned_int_param){
+                sstream << "    Unsigned Int Param : " << std::to_string(*(this->unsigned_int_param)) <<  ",\n";
+            }
+            if(this->signed_int_param){
+                sstream << "    Signed Int Param : " << std::to_string(*(this->signed_int_param)) <<  ",\n";
+            }
+            if(this->float_param){
+                sstream << "    Float Param : " << *(this->float_param) <<  ",\n";
+            }
+            if(this->string_param){
+                sstream << "    String Param : " << *(this->string_param) <<  ",\n";
+            }
+            if(this->char_param){
+                sstream << "    Char param : " << *(this->char_param) <<  ",\n";
+            }
+
+            std::string output = sstream.str();
+            return output;
+        };
+
+        friend bool operator == (I2C_CONFIG const& lefthand_payload, I2C_CONFIG const& righthand_payload){
+            bool equal = true;
+            equal &= (lefthand_payload.i2c_bus == righthand_payload.i2c_bus);
+            equal &= (lefthand_payload.slave_address == righthand_payload.slave_address);
+            equal &= (lefthand_payload.i2c_register == righthand_payload.i2c_register);
+            equal &= (lefthand_payload.data_width == righthand_payload.data_width);
+            // TODO optional param equality
+
+            return equal;
+        };
 
 };
 
-class I2C_CONFIG : public PayloadConf{
+class GPIO_CONFIG : public Payload{
 
 };
 
-class GPIO_CONFIG : public PayloadConf{
+class XADC_CONFIG : public Payload{
 
 };
 
-class XADC_CONFIG : public PayloadConf{
+class RAWREG_CONFIG : public Payload{
 
 };
 
-class RAWREG_CONFIG : public PayloadConf{
-
-};
-
-class MEM_CONFIG : public PayloadConf{
+class MEM_CONFIG : public Payload{
 
 };
 

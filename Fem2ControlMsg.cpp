@@ -379,6 +379,32 @@ template <> RAWREG_RW Fem2ControlMsg::get_payload(){
     }
 }
 
+template <> I2C_CONFIG Fem2ControlMsg::get_payload(){
+
+   //int offset; // offset for start of the data
+
+    if (this->get_cmd_type() == CMD_CONFIGURE && this->get_access_type() == ACCESS_I2C){
+
+        I2C_CONFIG i2c_config;
+        i2c_config.i2c_bus = this->get_param_at<int>("i2c_bus");
+        i2c_config.i2c_register = this->get_param_at<int>("i2c_register");
+        i2c_config.slave_address = this->get_param_at<int>("slave_address");
+        i2c_config.data_width = this->get_param_at<DataWidth>("data_width");
+
+        // TODO - manage non existant param.
+        i2c_config.unsigned_int_param = this->get_param_at<int>("unsigned_int_param");
+        i2c_config.signed_int_param = this->get_param_at<int>("signed_int_param");
+        i2c_config.float_param = this->get_param_at<double>("float_param");
+        i2c_config.string_param = this->get_param_at<std::string>("string_param");
+        i2c_config.char_param = static_cast<char>(this->get_param_at<uint8_t>("char_param"));
+
+        this->string_payload = i2c_config.print();     
+        return i2c_config; 
+    }
+    else{
+        throw Fem2ControlMsgException("Payload Is Not I2C CONFIG Type");
+    }
+}
 
 //  TODO Validation/ Exceptions?
 std::string Fem2ControlMsg::print(){
@@ -431,15 +457,17 @@ template <> uint8_t Fem2ControlMsg::get_value(msgpack::type::variant const& valu
     return static_cast<uint8_t>(value.as_uint64_t());
 }
 
+
 template <> int Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
+
     if (value.is_uint64_t())
     {
-        return static_cast<int>(value.as_uint64_t());
+        return static_cast<unsigned int>(value.as_uint64_t());
     }
     else if (value.is_int64_t())
-    {
-        return static_cast<int>(value.as_int64_t());
+    { 
+        return static_cast<signed int>(value.as_int64_t());
     }
     else
     {
@@ -448,6 +476,7 @@ template <> int Fem2ControlMsg::get_value(msgpack::type::variant const& value)
         //TODO exception here
     }
 }
+
 
 template <> std::string Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
