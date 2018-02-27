@@ -1,10 +1,10 @@
 #include <iostream> 
 #include <zmq.hpp>
-#include "Fem2ControlMsg.hpp"
+#include "Fem2ControlMsg.h"
 #include <cassert>
-#include "MsgPackEncoder.hpp"
-#include "mem_reader.hpp"
-#include "i2c_reader.hpp"
+#include "MsgPackEncoder.h"
+#include "mem_reader.h"
+#include "i2c_reader.h"
 
 /*
 Mock Fem Server - uses ZMQ and MsgPack encoding to receive and send a single

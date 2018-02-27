@@ -1,4 +1,4 @@
-#include "i2c_reader.hpp"
+#include "i2c_reader.h"
 
 using namespace Femii;
 

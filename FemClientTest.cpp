@@ -1,8 +1,9 @@
 #include <iostream> 
 #include <zmq.hpp>
-#include "Fem2ControlMsg.hpp"
+#include <typeinfo>
+#include "Fem2ControlMsg.h"
 #include <cassert>
-#include "MsgPackEncoder.hpp"
+#include "MsgPackEncoder.h"
 //#include "data_helpers.hpp"
 
 
@@ -855,7 +856,7 @@ void test_init_config(){
     i2c_config.i2c_bus = 0x0;
     i2c_config.i2c_register = 0xA;
     i2c_config.slave_address = 0x5C;
-    i2c_config.data_width = WIDTH_BYTE;
+    //i2c_config.data_width = WIDTH_BYTE;
     i2c_config.unsigned_int_param = 123456;
     i2c_config.signed_int_param = -1;
     i2c_config.float_param = 0.05;
@@ -875,6 +876,120 @@ void test_init_config(){
 }
 
 
+void test_empty_payload(){
+
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    I2C_RW config_back = request.get_payload<I2C_RW>();
+
+}
+
+
+void test_wrong_payload(){
+
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
+    I2C_RW the_i2c;
+    the_i2c.i2c_bus = 1;
+    the_i2c.slave_address = 2;
+    the_i2c.i2c_register = 3;
+    the_i2c.data_width = WIDTH_BYTE;
+    try{
+        request.set_payload<I2C_RW>(the_i2c);
+    }
+    catch(Fem2ControlMsgException e){
+        std::string error = e.what();
+        std::cout << "Threw @ set I2C" + error <<std::endl;
+    }   
+ 
+    GPIO_RW gread;
+    try{
+        request.set_payload<GPIO_RW>(gread);
+    }
+    catch(Fem2ControlMsgException e){
+        std::string error = e.what();
+        std::cout << "Threw @ set GPIO" + error <<std::endl;
+    }  
+    XADC_RW xread;
+    try{
+        request.set_payload<XADC_RW>(xread);
+    }
+    catch(Fem2ControlMsgException e){
+        std::string error = e.what();
+        std::cout << "Threw @ set XADC" + error <<std::endl;
+    }  
+
+    RAWREG_RW rread;
+     try{
+        request.set_payload<RAWREG_RW>(rread);
+    }
+    catch(Fem2ControlMsgException e){
+        std::string error = e.what();
+        std::cout << "Threw @ set XADC" + error <<std::endl;
+    } 
+
+    DDR_RW ddrread;
+    try{
+        request.set_payload<DDR_RW>(ddrread);
+    }
+    catch(Fem2ControlMsgException e){
+        std::string error = e.what();
+        std::cout << "Threw @ set DDR" + error <<std::endl;
+    }
+
+    QDR_RW qdrread;
+    try{
+        request.set_payload<QDR_RW>(qdrread);
+    }
+    catch(Fem2ControlMsgException e){
+        std::string error = e.what();
+        std::cout << "Threw @ set QDR" + error <<std::endl;
+    }
+
+    QSPI_RW qspiread;
+    try{
+        request.set_payload<QSPI_RW>(qspiread);
+    }
+    catch(Fem2ControlMsgException e){
+        std::string error = e.what();
+        std::cout << "Threw @ set QSPI" + error <<std::endl;
+    }
+}
+
+void test_femii_config(){
+
+
+    FEMII_CONFIG fem_config;
+    fem_config.set_param("param1", 1234);
+    int error = fem_config.set_param("param1", 1234);
+    try {
+        if (error == -1){
+            throw Fem2ControlMsgException("Parameter already exists");
+        }
+    }
+    catch(Fem2ControlMsgException e){
+        std::cout << e.what() << std::endl;
+    }
+    fem_config.set_param("float_param", 1.234);
+    fem_config.set_param("string_param", "1234");
+    fem_config.set_param("negative_param", -1234);
+
+    int param1 = fem_config.get_param<int>("param1");
+    double d_param = fem_config.get_param<double>("float_param");
+    std::string s_param = fem_config.get_param<std::string>("string_param");
+    int n_param = fem_config.get_param<int>("negative_param");
+
+    std::cout << param1 << std::endl << d_param  << std::endl << s_param << std::endl << n_param << std::endl;
+    try {
+        int test = fem_config.get_param<int>("wibblewobble");
+        if(test == 0){
+            throw Fem2ControlMsgException("Parameter does not exist");
+        }
+    }
+    catch(Fem2ControlMsgException e){
+        std::cout << e.what() << std::endl;
+    }
+}
+
+
 int main(){
 
     socket_.connect("tcp://192.168.0.122:5555");
@@ -887,6 +1002,12 @@ int main(){
         this_data.push_back(i);
     }
 
+    //test_empty_payload();
+
+    test_wrong_payload();
+    test_femii_config();
+
+    /*
     test_init_config();
     
 
