@@ -467,7 +467,7 @@ void test_gpio_write_read(){
     the_gpio_read.mem_address = GPIO_DDR3_PAGE;
     the_gpio_read.mem_register = 0;
     the_gpio_read.data_width = WIDTH_BYTE;
-    read_request.set_payload<GPIO_RW>(the_gpio_read, 1);
+    read_request.set_payload<GPIO_RW>(the_gpio_read, 1); // read 1 byte.
 
     printf("GPIO Request: \n");
     std::cout << read_request;
@@ -530,7 +530,7 @@ void test_ddr_write_read(){
    
 
     the_ddr_write.data_width = WIDTH_LONG;
-    write_request.set_payload<DDR_RW>(the_ddr_write);
+    write_request.set_payload<DDR_RW>(the_ddr_write); // at write - we initiate size with size of vector. 
 
     printf("DDR Write Request: \n");
     std::cout << write_request;
@@ -560,11 +560,11 @@ void test_ddr_write_read(){
     the_ddr_read.page = 3;
     the_ddr_read.offset = 0x00000000;        //DDR offset address
     the_ddr_read.data_width = WIDTH_LONG;
-    int data_length = 1; //read 1 long
-    read_request.set_payload<DDR_RW>(the_ddr_read, data_length);
+    int read_length = 1; //read 1 long
+    read_request.set_payload<DDR_RW>(the_ddr_read, read_length);
 
     printf("DDR Read Request: \n");
-    std::cout << read_request;
+    std::cout << read_request << "datalength :" << read_request.data_length_ << "readlength :" << read_request.read_length_ << std::endl;
 
     //  encode the fem2controlmsg as a string (byte string) and send
     std::string encoded_read_request;
@@ -728,8 +728,8 @@ void test_qspi_read(){
     the_qspi.mem_address = QSPI_BASE;
     the_qspi.offset = 0x64;
     the_qspi.data_width = WIDTH_BYTE;//??
-    int data_length = 1; // the number of bytes to read.
-    request.set_payload<QSPI_RW>(the_qspi, data_length);
+    int read_length = 1; // the number of bytes to read.
+    request.set_payload<QSPI_RW>(the_qspi, read_length);
 
     printf("QSPI Request: \n");
     std::cout << request;
@@ -752,7 +752,7 @@ void test_qspi_read(){
     uint32_t result = form_words_longs<QSPI_RW>(the_qspi_back, 0); // this is just taking the first byte.
    
     assert(result == 0x000000A5);
-    assert(request.data_length_ == reply.data_length_);
+    assert(request.read_length_ == reply.data_length_);
     std::cout << "QSPI READ MATCH" << std::endl;
 }
 
@@ -768,8 +768,8 @@ void test_i2c_read(){
     the_i2c.slave_address = I2C_EEPROM;
     the_i2c.i2c_register = 0x10;
     the_i2c.data_width = WIDTH_BYTE;//??
-    int data_length = 6; // read 6 bytes from the EEPROM i.e the MAC ADDRESS
-    request.set_payload<I2C_RW>(the_i2c, data_length);
+    int read_length = 6; // read 6 bytes from the EEPROM i.e the MAC ADDRESS
+    request.set_payload<I2C_RW>(the_i2c, read_length);
 
     printf("I2C Request: \n");
     std::cout << request;
@@ -789,13 +789,8 @@ void test_i2c_read(){
     printf("I2C Reply: \n");
     std::cout << reply;
 
-    assert(request.data_length_ == reply.data_length_);
-    /*
-    uint32_t result = form_words_longs<I2C_RW>(the_i2c_back);
-   
-    assert(result == 0x01);
-    std::cout << "I2C READ MATCH" << std::endl;
-    */
+    assert(request.read_length_ == reply.data_length_);
+
 }
 
 void led_control(bool on_off){
@@ -865,8 +860,6 @@ void test_init_config(){
     i2c_config.char_param = 'c';
     request.set_payload<I2C_CONFIG>(i2c_config);
     std::cout << "Configuration Pre-Encoding:\n" << request << std::endl;
-
-
     I2C_CONFIG config_back = request.get_payload<I2C_CONFIG>();
     Fem2ControlMsg reply(Fem2ControlMsg::CMD_CONFIGURE, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
     reply.set_payload<I2C_CONFIG>(config_back);
@@ -1026,14 +1019,17 @@ void test_femii_config(){
     Fem2ControlMsg request;
     request.set_cmd_type(Fem2ControlMsg::CMD_CONFIGURE);
     request.set_payload<FEMII_CONFIG>(fem_config);
-    /*
+
+    std::cout << "request payload is : " <<  request.get_payload_type() << std::endl;
+
+    
     try{
         FEMII_CONFIG fem_config_back = request.get_payload<FEMII_CONFIG>();
     }
     catch(...){
         std::cout << "heree's the problem" <<std::endl;
     }
-    */
+    
 }
 
 
@@ -1050,12 +1046,9 @@ int main(){
     }
 
     //test_empty_payload();
-
-    test_wrong_payload();
-    test_femii_config();
-
-    /*
-    test_init_config();
+    //test_wrong_payload();
+    //test_femii_config();
+   // test_init_config();
     
 
     test_gpio_encoding(this_data);

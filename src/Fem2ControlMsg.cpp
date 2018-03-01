@@ -189,8 +189,10 @@ std::string Fem2ControlMsg::get_payload_type(){
 
 template <> I2C_RW Fem2ControlMsg::get_payload(){
 
-    if(this->payload.as_string() != VOID_PAYLOAD){     
-
+    if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
+        throw Fem2ControlMsgException("Missing Payload.");
+    }
+    else{
         int offset; // offset for start of the data
         if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_I2C){
 
@@ -216,14 +218,14 @@ template <> I2C_RW Fem2ControlMsg::get_payload(){
             throw Fem2ControlMsgException("Payload Is Not I2C Type");
         }
     } // if not unspecified
-    else{
-        throw Fem2ControlMsgException("Missing Payload.");
-    }
 }
 
 template <> DDR_RW Fem2ControlMsg::get_payload(){
 
-    if(this->payload.as_string() != VOID_PAYLOAD){
+    if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
+        throw Fem2ControlMsgException("Missing Payload.");
+    }
+    else{
         int offset; // offset for start of the data
         if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_DDR){
 
@@ -236,6 +238,7 @@ template <> DDR_RW Fem2ControlMsg::get_payload(){
             offset = 4;
             if(!(this->data_length_ == 0))
             {
+                std::cout << "Length is not 0 " << std::endl;
                 /// guard for read sends 
                 for(int i=offset; i < (this->data_length_ + offset); i++){
                     //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
@@ -250,14 +253,14 @@ template <> DDR_RW Fem2ControlMsg::get_payload(){
             throw Fem2ControlMsgException("Payload Is Not DDR Type");
         }
     }
-    else{
-        throw Fem2ControlMsgException("Missing Payload.");
-    }
 }
 
 template <> QDR_RW Fem2ControlMsg::get_payload(){
 
-    if(this->payload.as_string() != VOID_PAYLOAD){
+    if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
+        throw Fem2ControlMsgException("Missing Payload.");
+    }
+    else{
         int offset; // offset for start of the data
         if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_QDR){
 
@@ -283,14 +286,14 @@ template <> QDR_RW Fem2ControlMsg::get_payload(){
             throw Fem2ControlMsgException("Payload Is Not QDR Type");
         }
     }
-    else{
-        throw Fem2ControlMsgException("Missing Payload.");
-    }
 }
 
 template <> QSPI_RW Fem2ControlMsg::get_payload(){
 
-    if(this->payload.as_string() != VOID_PAYLOAD){
+    if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
+        throw Fem2ControlMsgException("Missing Payload.");
+    }
+    else{
         int offset; // offset for start of the data
         if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_QSPI){
 
@@ -316,15 +319,15 @@ template <> QSPI_RW Fem2ControlMsg::get_payload(){
             throw Fem2ControlMsgException("Payload Is Not QSPI Type");
         }
     }
-    else{
-        throw Fem2ControlMsgException("Missing Payload.");
-    }
 }
 
 
 template <> GPIO_RW Fem2ControlMsg::get_payload(){
 
-    if(this->payload.as_string() != VOID_PAYLOAD){
+    if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
+        throw Fem2ControlMsgException("Missing Payload.");
+    }
+    else{
         int offset; // offset for start of the data
         if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_GPIO){
             GPIO_RW gpio_payload;
@@ -348,15 +351,14 @@ template <> GPIO_RW Fem2ControlMsg::get_payload(){
             throw Fem2ControlMsgException("Payload Is Not GPIO Type");
         }
     }
-    else{
-        throw Fem2ControlMsgException("Missing Payload.");
-    }
 }
 
 template <> XADC_RW Fem2ControlMsg::get_payload(){
     
-    if(this->payload.as_string() != VOID_PAYLOAD){
-
+    if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
+        throw Fem2ControlMsgException("Missing Payload.");
+    }
+    else{
         int offset; // offset for start of the data
         if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_XADC){
             XADC_RW xadc_payload;
@@ -380,14 +382,14 @@ template <> XADC_RW Fem2ControlMsg::get_payload(){
             throw Fem2ControlMsgException("Payload Is Not XADC Type");
         }
     }
-    else{
-        throw Fem2ControlMsgException("Missing Payload.");
-    }
 }
 
 template <> RAWREG_RW Fem2ControlMsg::get_payload(){
-    if(this->payload.as_string() != VOID_PAYLOAD){
-
+    
+    if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
+        throw Fem2ControlMsgException("Missing Payload.");
+    }
+    else{
         int offset; // offset for start of the data
         if ((this->get_cmd_type() == CMD_READ || this->get_cmd_type() == CMD_WRITE || this->get_cmd_type() == CMD_NOTIFY) && this->get_access_type() == ACCESS_RAWREG){
             RAWREG_RW rreg_payload;
@@ -411,14 +413,14 @@ template <> RAWREG_RW Fem2ControlMsg::get_payload(){
             throw Fem2ControlMsgException("Payload Is Not RAWREG Type");
         }
     }
-    else{
-        throw Fem2ControlMsgException("Missing Payload.");
-    }
 }
 
 template <> I2C_CONFIG Fem2ControlMsg::get_payload(){
     
-    if(this->payload.as_string() != VOID_PAYLOAD){
+    if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
+        throw Fem2ControlMsgException("Missing Payload.");
+    }
+    else{
 
         if (this->get_cmd_type() == CMD_CONFIGURE && this->get_access_type() == ACCESS_I2C){
 
@@ -442,33 +444,31 @@ template <> I2C_CONFIG Fem2ControlMsg::get_payload(){
             throw Fem2ControlMsgException("Payload Is Not I2C CONFIG Type");
         }
     }
-    else{
-        throw Fem2ControlMsgException("Missing Payload.");
-    }    
 }
-/*
+
 template <> FEMII_CONFIG Fem2ControlMsg::get_payload(){
     
-    if(this->payload.as_string() != VOID_PAYLOAD){
-
+    if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
+        throw Fem2ControlMsgException("Missing Payload.");
+    }
+    else{
         if (this->get_cmd_type() == CMD_CONFIGURE && this->get_access_type() == ACCESS_UNSUPPORTED){
 
             FEMII_CONFIG femii_config;
-
-            std::map<msgpack::type::variant, msgpack::type::variant> test = this->payload.as_map();
-            //femii_config.params = this->payload.as_map();
-            this->string_payload = femii_config.print();     
-            return femii_config; 
+            if(this->payload.is_map()){
+                std::cout << "Im a map" <<std::endl;
+                std::map<msgpack::type::variant, msgpack::type::variant> test = this->payload.as_map();
+                femii_config.params = this->payload.as_map();
+                this->string_payload = femii_config.print();     
+                return femii_config; 
+            }
         }
         else{
             throw Fem2ControlMsgException("Payload Is Not FEMII CONFIG Type");
         }
     }
-    else{
-        throw Fem2ControlMsgException("Missing Payload.");
-    }    
 }
-*/
+
 
 //  TODO Validation/ Exceptions?
 std::string Fem2ControlMsg::print(){

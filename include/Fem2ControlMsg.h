@@ -368,7 +368,7 @@ public:
     //template <typename T> void set_payload(T const& the_payload);
 
    //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(I2C_RW const& the_payload, int size=-1){
+    template<typename E> void set_payload(I2C_RW const& the_payload, int read_length=-1){
         
         this->init_maps();
         std::string access_string;
@@ -391,13 +391,16 @@ public:
                 }
             } 
             this->payload = i2c_rw_vect;
-            //initialise the data length 
-            if(size == -1){
-                this->data_length_ = the_payload.the_data.size();
-            }
-            else{
-                this->data_length_ = size;
-            }
+            this->data_length_ = the_payload.the_data.size();
+
+            if(this->get_cmd_type() == CMD_READ){
+                if (read_length != -1){
+                    this->read_length_ = read_length;
+                }
+                else{
+                    throw Fem2ControlMsgException("No Read Length Was Provided For A Read Request");
+                }
+            }    
             // set the string representation of the payload for printing.
             this->string_payload = the_payload.print();
             }
@@ -413,7 +416,7 @@ public:
   
 
        //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(MEM_RW const& the_payload, int size=-1){
+    template<typename E> void set_payload(MEM_RW const& the_payload, int read_length=-1){
 
         this->init_maps();
         std::string access_string;
@@ -452,20 +455,23 @@ public:
                 }
             }
             this->payload = mem_rw_vect;
+            this->data_length_ = the_payload.the_data.size();
 
-            if(size == -1){
-                this->data_length_ = the_payload.the_data.size();
-            }
-            else{
-                this->data_length_ = size;
-            }
+            if(this->get_cmd_type() == CMD_READ){
+                if (read_length != -1){
+                    this->read_length_ = read_length;
+                }
+                else{
+                    throw Fem2ControlMsgException("No Read Length Was Provided For A Read Request");
+                }
+            }    
             // set the string representation of the payload for printing.
             this->string_payload = the_payload.print();
         }
     }
 
     //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
-    template<typename E> void set_payload(Basic_RW const& the_payload, int size=-1){
+    template<typename E> void set_payload(Basic_RW const& the_payload, int read_length=-1){
         this->init_maps();
         std::string access_string;
         std::string error_msg;
@@ -500,11 +506,15 @@ public:
                 }
             }
             this->payload = payload_rw_vect;
-            if(size == -1){
-                this->data_length_ = the_payload.the_data.size();
-            }
-            else{
-                this->data_length_ = size;
+            this->data_length_ = the_payload.the_data.size();
+
+            if(this->get_cmd_type() == CMD_READ){
+                if (read_length != -1){
+                    this->read_length_ = read_length;
+                }
+                else{
+                    throw Fem2ControlMsgException("No Read Length Was Provided For A Read Request");
+                }
             }
             // set the string representation of the payload for printing.
             this->string_payload = the_payload.print();
@@ -564,36 +574,15 @@ public:
         this->init_maps();
         if(this->get_access_type() == ACCESS_UNSUPPORTED && the_payload.name() == "femii_config"){
 
-            this->payload = the_payload.params;
-            /*
-
-        // iterate over integer vector and create a variant
-            std::map<msgpack::type::variant, msgpack::type::variant> payload_config_map;
-            payload_config_map["i2c_bus"] = the_payload.i2c_bus;
-            payload_config_map["i2c_register"] = the_payload.i2c_register;
-            payload_config_map["slave_address"] = the_payload.slave_address;
-            payload_config_map["data_width"] = static_cast<int>(the_payload.data_width);
-
-            // boost optional parameters hold true if they contain a value, then you deference the value it points to.
-            if(the_payload.unsigned_int_param){
-                payload_config_map["unsigned_int_param"] = *(the_payload.unsigned_int_param);
+            std::map<msgpack::type::variant, msgpack::type::variant> test_map;
+            try{
+                test_map.insert(the_payload.params.begin(), the_payload.params.end());                
             }
-            if(the_payload.signed_int_param){
-                payload_config_map["signed_int_param"] = *(the_payload.signed_int_param);
+            catch(...){
+                std::cout << "inserting the_payload into test_map is the problem" <<std::endl;
             }
-            if(the_payload.float_param){
-                payload_config_map["float_param"] = *(the_payload.float_param);
-            }
-            if(the_payload.string_param){
-                payload_config_map["string_param"] = *(the_payload.string_param);
-            }
-            if(the_payload.char_param){
-                payload_config_map["char_param"] = *(the_payload.char_param);
-            }      
-
-            this->payload = payload_config_map;
-            */
-            // set the string representation of the payload for printing.
+           
+            this->payload = test_map;
             this->string_payload = the_payload.print();
         }
         else{
@@ -686,9 +675,10 @@ public:
     template <typename T> T get_value(msgpack::type::variant const& value);
 
     int data_length_; // length of the data being sent
+    int read_length_; // length of the data to be read.
 
     //  Definition of the header struct for msgpack encoding 
-    MSGPACK_DEFINE_MAP(header, payload, data_length_);
+    MSGPACK_DEFINE_MAP(header, payload, data_length_, read_length_);
 
 private:
 
