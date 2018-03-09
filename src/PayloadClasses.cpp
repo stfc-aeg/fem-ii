@@ -133,39 +133,97 @@ std::string FEMII_CONFIG::name() const{
 std::string FEMII_CONFIG::print() const{
     
     std::stringstream sstream;
-    sstream << "    Name : " << this->name_ << ",\n";
-    /*
-    sstream << "    Memory Address : 0x" << std::hex << this->mem_address << ",\n";
-    sstream << "    Memory Register : 0x" << std::hex << this->mem_register << ",\n";
-    sstream << "    Data Width : " << init_data_width_map(this->data_width) << ",\n";
+    sstream << "\tName : " << this->name_ << ",\n";
+    sstream << "\tParams : {\n";
+    sstream << this->print_map(this->params);
+    sstream << "\t}\n";
+    std::string output = sstream.str();
+    return output;
+}
+
+std::string FEMII_CONFIG::print_map(std::multimap<msgpack::type::variant, msgpack::type::variant> const& map, bool recursive, int depth) const{
     
-    if (! this->the_data.empty()) //if there's no data don't print it
-    { 
-        sstream <<  "    The Data : ";
-        for (auto i = this->the_data.begin(); i != this->the_data.end(); i++ ) {
-            sstream << "0x" << std::hex << uint32_t(*i) << ", ";
+    std::stringstream sstream;
+    bool was_map = false;
+    if(map.size() != 0){
+        std::multimap<msgpack::type::variant, msgpack::type::variant>::const_iterator it;
+        for(it = map.begin(); it != map.end(); ++it){
+            std::string key = it->first.as_string();
+            msgpack::type::variant value = it->second;
+            
+            if(recursive){
+                sstream << "\t\t";
+                if(was_map && !value.is_multimap()){
+                    depth = depth - 2;
+                }
+                for (int i = 0; i < depth; ++i)
+                {
+                    sstream << "\t";
+                }
+            }
+            else{
+                sstream << "\t\t";
+            }
+
+            sstream << key << " : ";
+            std::string val = "undefined";
+            
+            if(value.is_multimap()){
+                ++depth;
+                was_map = true;
+                sstream << "{\n";
+                sstream << this->print_map(value.as_multimap(), true, depth);
+                sstream << "\t";
+                for (int i = 0; i < depth; ++i)
+                {
+                    sstream << "\t";
+                }
+                sstream << "},\n";
+            }
+            else{
+                was_map = false;
+                if(value.is_int64_t()){
+                    val = boost::lexical_cast<std::string>(value.as_int64_t()); 
+                    sstream << val << ",\n";
+                }
+                else if(value.is_uint64_t()){
+                    val = boost::lexical_cast<std::string>(value.as_uint64_t()); 
+                    sstream << val << ",\n";
+                }
+                else if(value.is_string()){
+                    val = value.as_string();
+                    sstream << val << ",\n";
+                }
+                else if(value.is_bool()){
+                    val = boost::lexical_cast<std::string>(value.as_bool());
+                    sstream << val << ",\n";
+                }
+                else if(value.is_double()){
+                    val = boost::lexical_cast<std::string>(value.as_double());
+                    sstream << val << ",\n";
+                }
+            }
         }   
     }
-    */
     std::string output = sstream.str();
     return output;
 }
 
 // sets parameter with value unless it already exists
-int FEMII_CONFIG::set_param(std::string name, msgpack::type::variant value, bool recurssive, msgpack::type::variant const& map){
+int FEMII_CONFIG::set_param(const std::string& name, msgpack::type::variant const& value, bool recurssive, msgpack::type::variant const& map){
 
     int count = 0;
     if(!recurssive){
-        std::map<msgpack::type::variant, msgpack::type::variant>::iterator it;
+        std::multimap<msgpack::type::variant, msgpack::type::variant>::iterator it;
         for(it = this->params.begin(); it != this->params.end(); ++it){
             //handle all nested maps first, adding to count if the parameter name is found
-            if(it->second.is_map()){
-                count += set_param(name, value, true, it->second.as_map());
+            if(it->second.is_multimap()){
+                count += set_param(name, value, true, it->second.as_multimap());
             }
         }    
         if (count == 0){ // if count is still 0, check the flat map, setting the value and return 0 if not found 
             if (this->params.count(name) == 0){
-                this->params[name] = value;
+                this->params.insert (std::pair<std::string, msgpack::type::variant>(name, value));
                 return  0; 
             }
             else{// return -1 if it was found
@@ -177,7 +235,7 @@ int FEMII_CONFIG::set_param(std::string name, msgpack::type::variant value, bool
         }   
     }
     else{// if it is a recurssive call, count the nested map, return 0 if not found, 1 if found.
-        if(map.as_map().count(name) == 0){
+        if(map.as_multimap().count(name) == 0){
             return 0; 
         }
         else{
@@ -215,7 +273,19 @@ template <> std::string FEMII_CONFIG::get_param_value(msgpack::type::variant con
 template <> double FEMII_CONFIG::get_param_value(msgpack::type::variant const& value)
 {
     return value.as_double();
-};     
+};
+
+bool operator == (FEMII_CONFIG const& lefthand_payload, FEMII_CONFIG const& righthand_payload){
+    bool equal = true;
+    equal &= (lefthand_payload.name() == righthand_payload.name());
+    equal &= (lefthand_payload.params.size() == righthand_payload.params.size());
+    equal &= std::equal(lefthand_payload.params.begin(), lefthand_payload.params.end(), righthand_payload.params.begin());
+    return equal;            
+};   
+
+bool operator != (FEMII_CONFIG const& lefthand_payload, FEMII_CONFIG const& righthand_payload){
+   return !(lefthand_payload == righthand_payload);
+};    
 
 
 std::string I2C_CONFIG::print() const{

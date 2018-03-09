@@ -309,6 +309,8 @@ public:
     const int16_t get_retries(void) const;
     const std::string get_string_timestamp(void) const;
     const boost::posix_time::ptime get_posix_timestamp(void) const;
+    const int get_read_length(void) const;
+    const int get_data_length(void) const;
     
     //  TODO Getter methods for the payload
 
@@ -320,6 +322,8 @@ public:
     void set_req_id(uint16_t req_id);
     void set_retries(int16_t retries);
     void set_timeout(int16_t timeout);
+    void set_read_length(int read_length);
+    void set_data_length(int data_length);
 
     //  TODO Setter methods for the payload
 
@@ -372,11 +376,11 @@ public:
         
         this->init_maps();
         std::string access_string;
-        if(the_payload.name() == "i2c_rw" && this->get_access_type() == ACCESS_I2C){
+        if(the_payload.name() == "i2c_rw" && this->get_access_type() == ACCESS_I2C)
+        {
 
         // iterate over integer vector and create a variant
             std::vector<msgpack::type::variant> i2c_rw_vect;
-
             i2c_rw_vect.push_back(the_payload.i2c_bus);
             i2c_rw_vect.push_back(the_payload.slave_address);
             i2c_rw_vect.push_back(the_payload.i2c_register);
@@ -384,27 +388,30 @@ public:
             
             if (! the_payload.the_data.empty()) //if the data hasn't been populated we don't send the vector.
             {
-                std::cout << "I'm Not Empty" << std::endl;
-                for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
-                {
-                    i2c_rw_vect.push_back(*i);
-                }
+                i2c_rw_vect.insert(i2c_rw_vect.end(), the_payload.the_data.begin(), the_payload.the_data.end());
             } 
-            this->payload = i2c_rw_vect;
-            this->data_length_ = the_payload.the_data.size();
 
-            if(this->get_cmd_type() == CMD_READ){
+            this->payload = i2c_rw_vect;
+            this->set_data_length(the_payload.the_data.size());
+            this->string_payload = the_payload.print();
+
+            if(this->get_cmd_type() == CMD_READ)
+            {
                 if (read_length != -1){
-                    this->read_length_ = read_length;
+                    this->set_read_length(read_length);
                 }
                 else{
                     throw Fem2ControlMsgException("No Read Length Was Provided For A Read Request");
                 }
             }    
-            // set the string representation of the payload for printing.
-            this->string_payload = the_payload.print();
+            //clean up the vector.
+            i2c_rw_vect.clear();
+            i2c_rw_vect.shrink_to_fit();
+
             }
-        else{
+
+        else
+        {
             if (access_type_map_.right.count(this->get_access_type()))
             {
                 access_string = access_type_map_.right.at(this->get_access_type());
@@ -426,19 +433,23 @@ public:
             access_string = access_type_map_.right.at(this->get_access_type());
         }
 
-        if(the_payload.name() == "ddr_rw" && this->get_access_type() != ACCESS_DDR){
+        if(the_payload.name() == "ddr_rw" && this->get_access_type() != ACCESS_DDR)
+        {
             error_msg = "Cannot Set An Access " + access_string +  " Message with Type DDR Read/Write Payload; Message-Payload Mismatch";
             throw Fem2ControlMsgException(error_msg);
         }
-        else if(the_payload.name() == "qdr_rw" && this->get_access_type() != ACCESS_QDR){
+        else if(the_payload.name() == "qdr_rw" && this->get_access_type() != ACCESS_QDR)
+        {
             error_msg = "Cannot Set An Access " + access_string +  " Message with Type QDR Read/Write Payload; Message-Payload Mismatch";
             throw Fem2ControlMsgException(error_msg);
         }
-        else if(the_payload.name() == "qspi_rw" && this->get_access_type() != ACCESS_QSPI){
+        else if(the_payload.name() == "qspi_rw" && this->get_access_type() != ACCESS_QSPI)
+        {
             error_msg = "Cannot Set An Access " + access_string +  " Message with Type QSPI Read/Write Payload; Message-Payload Mismatch";
             throw Fem2ControlMsgException(error_msg);
         }
-        else{
+        else
+        {
         // iterate over integer vector and create a variant
             std::vector<msgpack::type::variant> mem_rw_vect;
             mem_rw_vect.push_back(the_payload.mem_address);
@@ -449,24 +460,34 @@ public:
             if (! the_payload.the_data.empty()) //if the data hasn't been populated we don't send the vector.
             {
                 //guard for no data
+                mem_rw_vect.insert(mem_rw_vect.end(), the_payload.the_data.begin(), the_payload.the_data.end());
+                /*
                 for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
                 {
                     mem_rw_vect.push_back(*i);
                 }
+                */
             }
             this->payload = mem_rw_vect;
-            this->data_length_ = the_payload.the_data.size();
-
-            if(this->get_cmd_type() == CMD_READ){
-                if (read_length != -1){
-                    this->read_length_ = read_length;
+            this->set_data_length(the_payload.the_data.size());
+            // set the string representation of the payload for printing.
+            this->string_payload = the_payload.print();
+ 
+            if(this->get_cmd_type() == CMD_READ)
+            {
+                if (read_length != -1)
+                {
+                    this->set_read_length(read_length);
                 }
-                else{
+                else
+                {
                     throw Fem2ControlMsgException("No Read Length Was Provided For A Read Request");
                 }
             }    
-            // set the string representation of the payload for printing.
-            this->string_payload = the_payload.print();
+
+            //clean up the vector.
+            mem_rw_vect.clear();
+            mem_rw_vect.shrink_to_fit();
         }
     }
 
@@ -479,19 +500,23 @@ public:
         {
             access_string = access_type_map_.right.at(this->get_access_type());
         }
-        if(the_payload.name() == "gpio_rw" && this->get_access_type() != ACCESS_GPIO){
+        if(the_payload.name() == "gpio_rw" && this->get_access_type() != ACCESS_GPIO)
+        {
             error_msg = "Cannot Set An Access " + access_string +  " Message with Type GPIO Read/Write Payload; Message-Payload Mismatch";
             throw Fem2ControlMsgException(error_msg);
         }
-        else if(the_payload.name() == "xadc_rw" && this->get_access_type() != ACCESS_XADC){
+        else if(the_payload.name() == "xadc_rw" && this->get_access_type() != ACCESS_XADC)
+        {
             error_msg = "Cannot Set An Access " + access_string +  " Message with Type XADC Read/Write Payload; Message-Payload Mismatch";
             throw Fem2ControlMsgException(error_msg);
         }
-        else if(the_payload.name() == "rawreg_rw" && this->get_access_type() != ACCESS_RAWREG){
+        else if(the_payload.name() == "rawreg_rw" && this->get_access_type() != ACCESS_RAWREG)
+        {
             error_msg = "Cannot Set An Access " + access_string +  " Message with Type Raw Register Read/Write Payload; Message-Payload Mismatch";
             throw Fem2ControlMsgException(error_msg);
         }
-        else{
+        else
+        {
         // iterate over integer vector and create a variant
             std::vector<msgpack::type::variant> payload_rw_vect;
             payload_rw_vect.push_back(the_payload.mem_address);
@@ -500,24 +525,31 @@ public:
             
             if (! the_payload.the_data.empty()) //if the data hasn't been populated we don't send the vector.
             {
+                payload_rw_vect.insert(payload_rw_vect.end(), the_payload.the_data.begin(), the_payload.the_data.end());
+                /*
                 for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
                 {
                     payload_rw_vect.push_back(*i);
                 }
+                */
             }
             this->payload = payload_rw_vect;
-            this->data_length_ = the_payload.the_data.size();
+            this->set_data_length(the_payload.the_data.size());
+            this->string_payload = the_payload.print();
 
-            if(this->get_cmd_type() == CMD_READ){
-                if (read_length != -1){
-                    this->read_length_ = read_length;
+            if(this->get_cmd_type() == CMD_READ)
+            {
+                if (read_length != -1)
+                {
+                    this->set_read_length(read_length);
                 }
-                else{
+                else
+                {
                     throw Fem2ControlMsgException("No Read Length Was Provided For A Read Request");
                 }
             }
-            // set the string representation of the payload for printing.
-            this->string_payload = the_payload.print();
+            payload_rw_vect.clear();
+            payload_rw_vect.shrink_to_fit();
         }
     }
 
@@ -525,7 +557,8 @@ public:
     template<typename E> void set_payload(I2C_CONFIG const& the_payload){
 
         this->init_maps();
-        if(this->get_access_type() == ACCESS_I2C && the_payload.name() == "i2c_config"){
+        if(this->get_access_type() == ACCESS_I2C && the_payload.name() == "i2c_config")
+        {
 
         // iterate over integer vector and create a variant
             std::map<msgpack::type::variant, msgpack::type::variant> payload_config_map;
@@ -535,28 +568,34 @@ public:
             payload_config_map["data_width"] = static_cast<int>(the_payload.data_width);
 
             // boost optional parameters hold true if they contain a value, then you deference the value it points to.
-            if(the_payload.unsigned_int_param){
+            if(the_payload.unsigned_int_param)
+            {
+                //payload_config_map.insert(std::pair<std::string, uint64_t>("unsigned_int_param", *(the_payload.unsigned_int_param)));
                 payload_config_map["unsigned_int_param"] = *(the_payload.unsigned_int_param);
             }
-            if(the_payload.signed_int_param){
+            if(the_payload.signed_int_param)
+            {
                 payload_config_map["signed_int_param"] = *(the_payload.signed_int_param);
             }
-            if(the_payload.float_param){
+            if(the_payload.float_param)
+            {
                 payload_config_map["float_param"] = *(the_payload.float_param);
             }
-            if(the_payload.string_param){
+            if(the_payload.string_param)
+            {
                 payload_config_map["string_param"] = *(the_payload.string_param);
             }
-            if(the_payload.char_param){
+            if(the_payload.char_param)
+            {
                 payload_config_map["char_param"] = *(the_payload.char_param);
             }      
 
             this->payload = payload_config_map;
-            
-            // set the string representation of the payload for printing.
             this->string_payload = the_payload.print();
+            payload_config_map.clear();
         }
-        else{
+        else
+        {
             std::string access_string;
             std::string error_msg;
             if (access_type_map_.right.count(this->get_access_type()))
@@ -572,20 +611,29 @@ public:
     template<typename E> void set_payload(FEMII_CONFIG const& the_payload){
 
         this->init_maps();
-        if(this->get_access_type() == ACCESS_UNSUPPORTED && the_payload.name() == "femii_config"){
-
-            std::map<msgpack::type::variant, msgpack::type::variant> test_map;
+        if(this->get_access_type() == ACCESS_UNSUPPORTED && the_payload.name() == "femii_config")
+        {
+            /*
+            std::multimap<msgpack::type::variant, msgpack::type::variant> test_map;
             try{
                 test_map.insert(the_payload.params.begin(), the_payload.params.end());                
             }
             catch(...){
                 std::cout << "inserting the_payload into test_map is the problem" <<std::endl;
             }
-           
-            this->payload = test_map;
+            */
+            if(the_payload.params.size()!=0)
+            {
+                this->payload = the_payload.params; //test_map;
+            }
+            else
+            {
+                throw Fem2ControlMsgException("Empty Parameter Block.");
+            }
             this->string_payload = the_payload.print();
         }
-        else{
+        else
+        {
             std::string access_string;
             std::string error_msg;
             if (access_type_map_.right.count(this->get_access_type()))
@@ -597,18 +645,20 @@ public:
         }
     }
 
+    // Unnecesarry Method.
     //Specialisation of the set_payload template for vector<int> not natively supported by msgpack
     template<typename E> void set_payload(std::vector<int> const& the_payload){
          
        // iterate over integer vector and create a variant
         std::vector<msgpack::type::variant> temp;
 
-        for (auto i = the_payload.begin(); i != the_payload.end(); i++ ) {
+        for (auto i = the_payload.begin(); i != the_payload.end(); i++ ){
             temp.push_back(*i);
         }   
         this->payload = temp;
     }
 
+    // Unnecesarry Method.
     //Specialisation of the set_payload template for vector<u8> not natively supported by msgpack
     template<typename E> void set_payload(std::vector<u8> const& the_payload){
        // iterate over integer vector and create a variant
@@ -620,7 +670,6 @@ public:
         }   
         this->payload = temp;
     }
-  
 
     //  Overloaded outstream operator
     friend std::ostream& operator <<(std::ostream& os, Fem2ControlMsg& control_message);
@@ -644,43 +693,41 @@ public:
     template <typename T> T get_payload_at(int const& index)
     {
         //should test for vector.
-        try{
-            return get_value<T>(this->payload.as_vector().at(index));   // does this need a guard.
+        try
+        {
+            return get_value<T>(this->payload.as_vector()[index]);//.at(index));   // does this work
         }
-        catch(...){
-            //return static_cast<T>(0); // this is nonsense
-            //to do exception
+        catch(...)
+        {
             throw Fem2ControlMsgException("Payload value could not be recovered");
         }
-
     }
     
-    //To be used in getting data values in vector payloads
+    //this is for i2c_maps?
     template <typename T> T get_param_at(std::string const& name)
     {
-        //should test for vector.
-        
-            std::map<msgpack::type::variant, msgpack::type::variant> test = this->payload.as_map();
-            std::map<msgpack::type::variant, msgpack::type::variant>::iterator it; 
-            it = test.find(name);
-            if (it != test.end()) {
-                return get_value<T>(it->second);
-            }
-            else{
-                throw Fem2ControlMsgException("Parameter Name Not Found");
-            }
-     
+        std::map<msgpack::type::variant, msgpack::type::variant>::iterator it; 
+        it = this->payload.as_map().find(name);
+        if (it != this->payload.as_map().end()) 
+        {
+            return get_value<T>(it->second);
+        }
+        else
+        {
+            throw Fem2ControlMsgException("Parameter Name Not Found");
+        }
     }
+
     //to be used in getting data values in vector payloads
     template <typename T> T get_value(msgpack::type::variant const& value);
-
-    int data_length_; // length of the data being sent
-    int read_length_; // length of the data to be read.
 
     //  Definition of the header struct for msgpack encoding 
     MSGPACK_DEFINE_MAP(header, payload, data_length_, read_length_);
 
 private:
+
+    int data_length_; // length of the data being sent
+    int read_length_; // length of the data to be read.
 
     //  Struct to hold the defined header types/fields, helper for defining parameters for msgpack encoding
     struct Header{

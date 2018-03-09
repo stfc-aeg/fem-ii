@@ -152,29 +152,33 @@ class FEMII_CONFIG : public Payload{
 
     public:
         const std::string name_ = "femii_config";
-        std::map<msgpack::type::variant, msgpack::type::variant> params; 
+        std::multimap<msgpack::type::variant, msgpack::type::variant> params; 
         FEMII_CONFIG(){};
 
         std::string name() const;
         std::string print() const;
-        int set_param(std::string name, msgpack::type::variant value, bool recurssive=false, msgpack::type::variant const& map=-1);
+        std::string print_map(std::multimap<msgpack::type::variant, msgpack::type::variant> const& map, bool recursive=false, int depth=0) const;
+        int set_param(const std::string& name, msgpack::type::variant const& value, bool recurssive=false, msgpack::type::variant const& map=-1);
+        
+        friend bool operator == (FEMII_CONFIG const& lefthand_payload, FEMII_CONFIG const& righthand_payload);
+        friend bool operator != (FEMII_CONFIG const& lefthand_payload, FEMII_CONFIG const& righthand_payload);
 
         
-        template <typename T> T get_param(std::string name, bool reccursive=false, msgpack::type::variant const& map=-1){
+        template <typename T> T get_param(const std::string& name, bool reccursive=false, msgpack::type::variant const& map=-1){
             
             bool is_nested = false;
             bool found_in_nested = false;
 
             //For basic first time calls, iterate over the map
             if(!reccursive){
-                std::map<msgpack::type::variant, msgpack::type::variant>::iterator it;// = this->params.find(name);
+                std::multimap<msgpack::type::variant, msgpack::type::variant>::iterator it;
                 for(it = this->params.begin(); it != this->params.end(); ++it){
                     //handle all nested maps first - calling recurssive function
-                    if(it->second.is_map()){
+                    if(it->second.is_multimap()){
                         is_nested = true;
                         try{
                             // call recurssive version
-                            return get_param<T>(name, true, it->second.as_map());
+                            return get_param<T>(name, true, it->second.as_multimap());
                         }
                         catch(Fem2Exception e){
                             found_in_nested = false;
@@ -194,11 +198,10 @@ class FEMII_CONFIG : public Payload{
                 }
             }
             else{ // recurssive version, pass the nested map and either return value or throw exception if not found
-                std::map<msgpack::type::variant, msgpack::type::variant> nested_map = map.as_map();
-                std::map<msgpack::type::variant, msgpack::type::variant>::iterator it; 
-                it = nested_map.find(name);
+                std::multimap<msgpack::type::variant, msgpack::type::variant>::const_iterator it; 
+                it = map.as_multimap().find(name);
 
-                if (it != nested_map.end()) {
+                if (it != map.as_multimap().end()) {
                     return get_param_value<T>(it->second);
                 }
                 else{
@@ -222,7 +225,6 @@ class I2C_CONFIG : public Payload{
         uint32_t i2c_bus;
         uint32_t slave_address;
         uint32_t i2c_register;
-        //std::map<std::string, msgpack::type::variant> param_block;
 
         // boost optional allows quick checking if parameters have been initialised.
         boost::optional <uint64_t> unsigned_int_param; 

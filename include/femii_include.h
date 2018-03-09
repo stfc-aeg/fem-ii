@@ -11,6 +11,7 @@
 #include <msgpack.hpp>
 #include "boost/bimap.hpp"
 #include <boost/optional.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace Femii{}
 

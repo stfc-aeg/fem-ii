@@ -83,7 +83,7 @@ template <typename T> void handle_read_request(Fem2ControlMsg& Fem2Request, i2c_
     uint8_t base = 0x10;// start of mac address
     uint8_t increment = 0x01; // end of mac address = base + 0x05
 
-    for (int i=0; i < Fem2Request.read_length_ ; i++){
+    for (int i=0; i < Fem2Request.get_read_length() ; i++){
         
         i2c_r_result = i2c_reader.read_byte(base); // this is for mac address
         std::cout << "i2c result: " << std::to_string(i2c_r_result) << std::endl;
@@ -93,12 +93,11 @@ template <typename T> void handle_read_request(Fem2ControlMsg& Fem2Request, i2c_
     }
 
     i2c_reader.close_bus();
-    int read_length = Fem2Request.read_length_;
-    Fem2Reply.set_payload<I2C_RW>(i2c_reply, read_length); // at this point don't set a size - use the vector.size()
+    int read_length = Fem2Request.get_read_length();
+    Fem2Reply.set_payload<I2C_RW>(i2c_reply, read_length);
     std::cout<< i2c_reply.print() << std::endl;
-    std::cout<< "data length: " << std::to_string(Fem2Reply.data_length_) << std::endl;
-    std::cout<< "read length: " << std::to_string(Fem2Reply.read_length_) << std::endl;
-
+    std::cout<< "data length: " << std::to_string(Fem2Reply.get_data_length()) << std::endl;
+    std::cout<< "read length: " << std::to_string(Fem2Reply.get_read_length()) << std::endl;
     //encode the fem2controlmsg reply 
 
 }
@@ -125,7 +124,7 @@ template <typename T> void handle_read_request(Fem2ControlMsg& Fem2Request, mem_
     mem_reply.data_width = mem_req.data_width;
 
     unsigned long mem_r_result;
-    for (int i=0; i < Fem2Request.read_length_ ; i++){
+    for (int i=0; i < Fem2Request.get_read_length() ; i++){
         
         mem_r_result = mem_reader.read_mem();
         std::cout << "mem result: " << std::to_string(mem_r_result) << std::endl;
@@ -133,11 +132,11 @@ template <typename T> void handle_read_request(Fem2ControlMsg& Fem2Request, mem_
         
     }
     mem_reader.unmap();
-    int read_length = Fem2Request.read_length_;
+    int read_length = Fem2Request.get_read_length();
     Fem2Reply.set_payload<T>(mem_reply, read_length);
     std::cout<< mem_reply.print() << std::endl;
-    std::cout<< "data length: " << std::to_string(Fem2Reply.data_length_) << std::endl;
-    std::cout<< "read length: " << std::to_string(Fem2Reply.read_length_) << std::endl;
+    std::cout<< "data length: " << std::to_string(Fem2Reply.get_data_length()) << std::endl;
+    std::cout<< "read length: " << std::to_string(Fem2Reply.get_read_length()) << std::endl;
 }
 
 /*
@@ -161,7 +160,7 @@ template <typename T> void handle_read_request(Fem2ControlMsg& Fem2Request, mem_
     basic_reply.data_width = basic_req.data_width;
 
     unsigned long basic_r_result;
-    for (int i=0; i < Fem2Request.read_length_ ; i++){
+    for (int i=0; i < Fem2Request.get_read_length(); i++){
         
         basic_r_result = mem_reader.read_mem(); // throws Fem2ControlMsgException
         std::cout << "mem result: " << std::to_string(basic_r_result) << std::endl;
@@ -169,11 +168,11 @@ template <typename T> void handle_read_request(Fem2ControlMsg& Fem2Request, mem_
         
     }
     mem_reader.unmap();
-    int read_length = Fem2Request.read_length_;
+    int read_length = Fem2Request.get_read_length();
     Fem2Reply.set_payload<T>(basic_reply, read_length);
     std::cout<< basic_reply.print() << std::endl;
-    std::cout<< "data length: " << std::to_string(Fem2Reply.data_length_) << std::endl;
-    std::cout<< "read length: " << std::to_string(Fem2Reply.read_length_) << std::endl;
+    std::cout<< "data length: " << std::to_string(Fem2Reply.get_data_length()) << std::endl;
+    std::cout<< "read length: " << std::to_string(Fem2Reply.get_read_length()) << std::endl;
     //encode the fem2controlmsg reply 
 }
 
@@ -207,7 +206,7 @@ template <typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, mem
     switch(mem_req.data_width){
 
         case WIDTH_BYTE:
-            for(int i = 0; i < Fem2Request.data_length_; i++){
+            for(int i = 0; i < Fem2Request.get_data_length(); i++){
                 
                 write_data = form_words_longs<T>(static_cast<T&>(mem_req), i);
                 write_result = mem_reader.write_mem(write_data);
@@ -215,7 +214,7 @@ template <typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, mem
             }
             break;
         case WIDTH_WORD:
-            for(int i = 0; i < Fem2Request.data_length_; i=i+2){
+            for(int i = 0; i < Fem2Request.get_data_length(); i=i+2){
                 
                 write_data = form_words_longs<T>(static_cast<T&>(mem_req), i);
                 write_result = mem_reader.write_mem(write_data);
@@ -223,7 +222,7 @@ template <typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, mem
             }
             break;
         case WIDTH_LONG:
-            for(int i = 0; i < Fem2Request.data_length_; i=i+4){
+            for(int i = 0; i < Fem2Request.get_data_length(); i=i+4){
                 
                 write_data = form_words_longs<T>(static_cast<T&>(mem_req), i);
                 write_result = mem_reader.write_mem(write_data);
@@ -240,7 +239,7 @@ template <typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, mem
     mem_reader.unmap();
 
     std::cout<< mem_reply.print() << std::endl;
-    std::cout<< "data length: " << std::to_string(Fem2Reply.data_length_) << std::endl;
+    std::cout<< "data length: " << std::to_string(Fem2Reply.get_data_length()) << std::endl;
     //encode the fem2controlmsg reply 
 
 }
@@ -275,7 +274,7 @@ template <typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, i2c
     switch(i2c_req.data_width){
 
         case WIDTH_BYTE:
-            for(int i = 0; i < Fem2Request.data_length_; i++){
+            for(int i = 0; i < Fem2Request.get_data_length(); i++){
                 
                 write_data = form_words_longs<I2C_RW>(i2c_req, i);
                 write_result = i2c_reader.write_byte(write_data);
@@ -283,7 +282,7 @@ template <typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, i2c
             }
             break;
         case WIDTH_WORD:
-            for(int i = 0; i < Fem2Request.data_length_; i=i+2){
+            for(int i = 0; i < Fem2Request.get_data_length(); i=i+2){
                 write_data = form_words_longs<I2C_RW>(i2c_req, i);
                 write_result = i2c_reader.write_word(write_data);
                 get_bytes<I2C_RW>(write_result, i2c_w_reply);
@@ -308,7 +307,7 @@ template <typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, i2c
     i2c_reader.close_bus();
 
     std::cout<< i2c_w_reply.print() << std::endl;
-    std::cout<< "data length: " << std::to_string(Fem2Reply.data_length_) << std::endl;
+    std::cout<< "data length: " << std::to_string(Fem2Reply.get_data_length()) << std::endl;
 }
 
 /*
@@ -340,7 +339,7 @@ template<typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, mem_
     switch(basic_req.data_width){
 
         case WIDTH_BYTE:
-            for(int i = 0; i < Fem2Request.data_length_; i++){
+            for(int i = 0; i < Fem2Request.get_data_length(); i++){
                 
                 write_data = form_words_longs<T>(static_cast<T&>(basic_req), i);
                 write_result = mem_reader.write_mem(write_data);
@@ -348,7 +347,7 @@ template<typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, mem_
             }
             break;
         case WIDTH_WORD:
-            for(int i = 0; i < Fem2Request.data_length_; i=i+2){
+            for(int i = 0; i < Fem2Request.get_data_length(); i=i+2){
                 
                 write_data = form_words_longs<T>(static_cast<T&>(basic_req), i);
                 write_result = mem_reader.write_mem(write_data);
@@ -356,7 +355,7 @@ template<typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, mem_
             }
             break;
         case WIDTH_LONG:
-            for(int i = 0; i < Fem2Request.data_length_; i=i+4){
+            for(int i = 0; i < Fem2Request.get_data_length(); i=i+4){
                 
                 write_data = form_words_longs<T>(static_cast<T&>(basic_req), i);
                 write_result = mem_reader.write_mem(write_data);
@@ -373,7 +372,7 @@ template<typename T> void handle_write_request(Fem2ControlMsg& Fem2Request, mem_
     mem_reader.unmap();
 
     std::cout<< basic_reply.print() << std::endl;
-    std::cout<< "data length: " << std::to_string(Fem2Reply.data_length_) << std::endl;
+    std::cout<< "data length: " << std::to_string(Fem2Reply.get_data_length()) << std::endl;
 }
  
                 
@@ -386,7 +385,7 @@ int main(){
 
     int test_num = 18;
     
-    while(true) /*for(int x = 0; x < test_num; x++)*/{ 
+    while(true) { 
 
         // receive request
         std::string encoded_request = receive();
@@ -401,7 +400,7 @@ int main(){
         std::string encoded_reply;
 
         // CMD_NOTIFY == just testing round trip encoding
-        if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_NOTIFY){
+        if(decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_NOTIFY || decoded_request.get_cmd_type() == Fem2ControlMsg::CMD_CONFIGURE){
 
             //encode the fem2controlmsg reply directly for encoding comparison.
             //encoded_reply = encoder.encode(decoded_request);

@@ -87,7 +87,16 @@ const boost::posix_time::ptime Fem2ControlMsg::get_posix_timestamp(void)const
         // Do nothing if parse exception occurred - return value of not_a_date_time indicates error
     }
     return pt;
-} 
+};
+
+
+const int Fem2ControlMsg::get_read_length(void) const{
+    return this->read_length_;
+};
+    
+const int Fem2ControlMsg::get_data_length(void) const{
+    return this->data_length_;
+};
 
 /*
  TODO VALIDATION OF ALL HEADER FIELDS
@@ -123,6 +132,20 @@ void Fem2ControlMsg::set_timeout(int16_t timeout){
     this->header.timeout_ = timeout;
 };
 
+void Fem2ControlMsg::set_read_length(int read_length){
+    if(this->get_cmd_type() == CMD_READ && read_length < 1){
+        throw Fem2ControlMsgException("Read Length Cannot Be Less than 1 For Read Commands."); // check this is ok
+    }
+    this->read_length_ = read_length;
+}
+void Fem2ControlMsg::set_data_length(int data_length){
+    if(this->get_cmd_type() == CMD_WRITE && data_length < 1){
+        throw Fem2ControlMsgException("Data Length Cannot Be Less than 1 For Write Commands.");//check this is right
+
+    }
+    this->data_length_ = data_length;
+
+}
 // initialisation of the bi-maps between enumerations and string representations
 void Fem2ControlMsg::init_maps(){
 
@@ -203,9 +226,9 @@ template <> I2C_RW Fem2ControlMsg::get_payload(){
             i2c_payload.data_width = this->get_payload_at<DataWidth>(3);
                 
             offset = 4;
-            if(!(this->data_length_ == 0))
+            if(!(this->get_data_length() == 0))
             {
-                for(int i=offset; i < (this->data_length_ + offset); i++){
+                for(int i=offset; i < (this->get_data_length() + offset); i++){
                     //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                     i2c_payload.the_data.push_back(this->get_payload_at<int>(i));
                 }
@@ -236,11 +259,11 @@ template <> DDR_RW Fem2ControlMsg::get_payload(){
             ddr_payload.data_width = this->get_payload_at<DataWidth>(3);
                 
             offset = 4;
-            if(!(this->data_length_ == 0))
+            if(!(this->get_data_length() == 0))
             {
                 std::cout << "Length is not 0 " << std::endl;
                 /// guard for read sends 
-                for(int i=offset; i < (this->data_length_ + offset); i++){
+                for(int i=offset; i < (this->get_data_length() + offset); i++){
                     //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                     ddr_payload.the_data.push_back(this->get_payload_at<int>(i));
                 }
@@ -271,9 +294,9 @@ template <> QDR_RW Fem2ControlMsg::get_payload(){
             qdr_payload.data_width = this->get_payload_at<DataWidth>(3);
                 
             offset = 4;
-            if(!(this->data_length_ == 0))
+            if(!(this->get_data_length() == 0))
             {
-                for(int i=offset; i < (this->data_length_ + offset); i++){
+                for(int i=offset; i < (this->get_data_length() + offset); i++){
                     //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                     qdr_payload.the_data.push_back(this->get_payload_at<int>(i));
                 }
@@ -304,9 +327,9 @@ template <> QSPI_RW Fem2ControlMsg::get_payload(){
             qspi_payload.data_width = this->get_payload_at<DataWidth>(3);
                 
             offset = 4;
-            if(!(this->data_length_ == 0))
+            if(!(this->get_data_length() == 0))
             {
-                for(int i=offset; i < (this->data_length_ + offset); i++){
+                for(int i=offset; i < (this->get_data_length() + offset); i++){
                     //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                     qspi_payload.the_data.push_back(this->get_payload_at<int>(i));
                 }
@@ -336,9 +359,9 @@ template <> GPIO_RW Fem2ControlMsg::get_payload(){
             gpio_payload.data_width = this->get_payload_at<DataWidth>(2);
                 
             offset = 3;
-            if(!(this->data_length_ == 0))
+            if(!(this->get_data_length() == 0))
             {
-                for(int i=offset; i < (this->data_length_ + offset); i++){
+                for(int i=offset; i < (this->get_data_length() + offset); i++){
                     //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                     gpio_payload.the_data.push_back(this->get_payload_at<int>(i));
                 }
@@ -367,9 +390,9 @@ template <> XADC_RW Fem2ControlMsg::get_payload(){
             xadc_payload.data_width = this->get_payload_at<DataWidth>(2);
                 
             offset = 3;
-            if(!(this->data_length_ == 0))
+            if(!(this->get_data_length() == 0))
             {
-                for(int i=offset; i < (this->data_length_ + offset); i++){
+                for(int i=offset; i < (this->get_data_length() + offset); i++){
                     //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                     xadc_payload.the_data.push_back(this->get_payload_at<int>(i));
                 }
@@ -398,9 +421,9 @@ template <> RAWREG_RW Fem2ControlMsg::get_payload(){
             rreg_payload.data_width = this->get_payload_at<DataWidth>(2);
                 
             offset = 3;
-            if(!(this->data_length_ == 0))
+            if(!(this->get_data_length() == 0))
             {
-                for(int i=offset; i < (this->data_length_ + offset); i++){
+                for(int i=offset; i < (this->get_data_length() + offset); i++){
                     //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
                     rreg_payload.the_data.push_back(this->get_payload_at<int>(i));
                 }
@@ -455,12 +478,47 @@ template <> FEMII_CONFIG Fem2ControlMsg::get_payload(){
         if (this->get_cmd_type() == CMD_CONFIGURE && this->get_access_type() == ACCESS_UNSUPPORTED){
 
             FEMII_CONFIG femii_config;
-            if(this->payload.is_map()){
-                std::cout << "Im a map" <<std::endl;
-                std::map<msgpack::type::variant, msgpack::type::variant> test = this->payload.as_map();
-                femii_config.params = this->payload.as_map();
+            if(this->payload.is_multimap()){
+                std::cout << "Im a map/multimap" <<std::endl;
+                
+                    //std::map<msgpack::type::variant, msgpack::type::variant> test = this->payload.as_map();
+
+                //try{
+                    //femii_config.params = this->payload.as_map();
+                //}
+                //catch(...){
+                                        
+                    std::cout << " was a multimap" << std::endl;
+
+                    std::multimap<msgpack::type::variant, msgpack::type::variant> mmap;
+
+                    mmap = this->payload.as_multimap();
+                    femii_config.params = mmap;
+                    /*
+                    std::multimap<msgpack::type::variant, msgpack::type::variant>::iterator it;
+
+                    for(it = mmap.begin(); it != mmap.end(); ++it){
+                        if(it->second.is_map()){
+                            femii_config.params[it->first] = "Is map";
+                        }
+                        else if(it->second.is_multimap()){
+                            femii_config.params[it->first] = "Is multimap";
+                        }
+                        else{
+                            femii_config.params[it->first] = it->second;
+
+                        }
+                        
+                        //.insert(std::pair<std::string, msgpack::type::variant>(it->first, it->second));
+                    }
+                    */
+
+                //}
                 this->string_payload = femii_config.print();     
                 return femii_config; 
+            }
+            else{
+                throw Fem2ControlMsgException("Incompatible payload type, payload is not a key value structure.");
             }
         }
         else{

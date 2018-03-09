@@ -114,7 +114,7 @@ void test_gpio_encoding(std::vector<uint8_t> const& the_data){
     assert(request == reply);
     assert(the_gpio == the_gpio_back);
     // double check the vector size + data length fields are the same
-    assert(the_gpio_back.the_data.size() == request.data_length_);
+    assert(the_gpio_back.the_data.size() == request.get_data_length());
     std::cout << "GPIO MATCH" << std::endl;
 }
 
@@ -161,7 +161,7 @@ void test_xadc_encoding(std::vector<uint8_t> const& the_data){
     assert(request == reply);
     assert(the_xadc == the_xadc_back);
     // double check the vector size + data length fields are the same
-    assert(the_xadc_back.the_data.size() == request.data_length_);
+    assert(the_xadc_back.the_data.size() == request.get_data_length());
     std::cout << "XADC MATCH" << std::endl;
     
 }
@@ -209,7 +209,7 @@ void test_rawreg_encoding(std::vector<uint8_t> const& the_data){
     assert(request == reply);
     assert(the_rreg == the_rreg_back);
     // double check the vector size + data length fields are the same
-    assert(the_rreg_back.the_data.size() == request.data_length_);
+    assert(the_rreg_back.the_data.size() == request.get_data_length());
     std::cout << "RAWREG MATCH" << std::endl;
     
     
@@ -258,7 +258,7 @@ void test_i2c_encoding(std::vector<uint8_t> const& the_data){
     assert(request == reply);
     assert(the_i2c == the_i2c_back);
     // double check the vector size + data length fields are the same
-    assert(the_i2c_back.the_data.size() == request.data_length_);
+    assert(the_i2c_back.the_data.size() == request.get_data_length());
     std::cout << "I2C MATCH" << std::endl;
     
 }
@@ -308,7 +308,7 @@ void test_qdr_encoding(std::vector<uint8_t> const& the_data){
     assert(request == reply);
     assert(the_qdr == the_qdr_back);
     // double check the vector size + data length fields are the same
-    assert(the_qdr_back.the_data.size() == request.data_length_);
+    assert(the_qdr_back.the_data.size() == request.get_data_length());
     std::cout << "QDR MATCH" << std::endl;
     
 }
@@ -358,7 +358,7 @@ void test_ddr_encoding(std::vector<uint8_t> const& the_data){
     assert(request == reply);
     assert(the_ddr == the_ddr_back);
     // double check the vector size + data length fields are the same
-    assert(the_ddr_back.the_data.size() == request.data_length_);
+    assert(the_ddr_back.the_data.size() == request.get_data_length());
     std::cout << "DDR MATCH" << std::endl;
     
 }
@@ -407,7 +407,7 @@ void test_qspi_encoding(std::vector<uint8_t> const& the_data){
     assert(request == reply);
     assert(the_qspi == the_qspi_back);
     // double check the vector size + data length fields are the same
-    assert(the_qspi_back.the_data.size() == request.data_length_);
+    assert(the_qspi_back.the_data.size() == request.get_data_length());
     std::cout << "QSPI MATCH" << std::endl;
   
 }
@@ -492,7 +492,7 @@ void test_gpio_write_read(){
     assert(the_gpio_write == the_gpio_read_back);    
  
     // double check the vector size + data length fields are the same
-    assert(the_gpio_write.the_data.size() == read_reply.data_length_);
+    assert(the_gpio_write.the_data.size() == read_reply.get_data_length());
     std::cout << "GPIO WRITE READ MATCH" << std::endl;
 
 }
@@ -564,7 +564,7 @@ void test_ddr_write_read(){
     read_request.set_payload<DDR_RW>(the_ddr_read, read_length);
 
     printf("DDR Read Request: \n");
-    std::cout << read_request << "datalength :" << read_request.data_length_ << "readlength :" << read_request.read_length_ << std::endl;
+    std::cout << read_request << "datalength :" << read_request.get_data_length() << "readlength :" << read_request.get_read_length() << std::endl;
 
     //  encode the fem2controlmsg as a string (byte string) and send
     std::string encoded_read_request;
@@ -584,7 +584,7 @@ void test_ddr_write_read(){
     assert(the_ddr_write == the_ddr_read_back);    
  
     // double check the vector size + data length fields are the same
-    assert(the_ddr_write.the_data.size() == read_reply.data_length_);
+    assert(the_ddr_write.the_data.size() == read_reply.get_data_length());
     std::cout << "DDR WRITE READ MATCH" << std::endl;
 }
 
@@ -664,7 +664,7 @@ void test_rawreg_write_read(){
     assert(the_rreg_write == the_rreg_read_back);    
  
     // double check the vector size + data length fields are the same
-    assert(the_rreg_write.the_data.size() == read_reply.data_length_);
+    assert(the_rreg_write.the_data.size() == read_reply.get_data_length());
     std::cout << "RAWREG WRITE READ MATCH" << std::endl;
 
 }
@@ -752,7 +752,7 @@ void test_qspi_read(){
     uint32_t result = form_words_longs<QSPI_RW>(the_qspi_back, 0); // this is just taking the first byte.
    
     assert(result == 0x000000A5);
-    assert(request.read_length_ == reply.data_length_);
+    assert(request.get_read_length() == reply.get_data_length());
     std::cout << "QSPI READ MATCH" << std::endl;
 }
 
@@ -789,7 +789,7 @@ void test_i2c_read(){
     printf("I2C Reply: \n");
     std::cout << reply;
 
-    assert(request.read_length_ == reply.data_length_);
+    assert(request.get_read_length() == reply.get_data_length());
 
 }
 
@@ -852,7 +852,7 @@ void test_init_config(){
     i2c_config.i2c_bus = 0x0;
     i2c_config.i2c_register = 0xA;
     i2c_config.slave_address = 0x5C;
-    //i2c_config.data_width = WIDTH_BYTE;
+    i2c_config.data_width = WIDTH_BYTE;
     i2c_config.unsigned_int_param = 123456;
     i2c_config.signed_int_param = -1;
     i2c_config.float_param = 0.05;
@@ -873,7 +873,12 @@ void test_init_config(){
 void test_empty_payload(){
 
     Fem2ControlMsg request(Fem2ControlMsg::CMD_READ, Fem2ControlMsg::ACCESS_I2C, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
-    I2C_RW config_back = request.get_payload<I2C_RW>();
+    try{
+        I2C_RW config_back = request.get_payload<I2C_RW>();
+    }
+    catch(Fem2ControlMsgException e){
+        std::cout << e.what() << std::endl;
+    }
 
 }
 
@@ -950,7 +955,6 @@ void test_wrong_payload(){
 
 void test_femii_config(){
 
-
     FEMII_CONFIG fem_config;
     fem_config.set_param("param1", 1234);
     int error = fem_config.set_param("param1", 1234);
@@ -972,6 +976,8 @@ void test_femii_config(){
     int n_param = fem_config.get_param<int>("negative_param");
 
     std::cout << param1 << std::endl << d_param  << std::endl << s_param << std::endl << n_param << std::endl;
+
+ 
     try {
         int test = fem_config.get_param<int>("wibblewobble");
     }
@@ -983,12 +989,24 @@ void test_femii_config(){
     nest["nest1"] = 1;
     nest["nest2"] = "nest";
 
-    std::map<msgpack::type::variant, msgpack::type::variant> nest2;
-    nest["new_nest1"] = 80;
-    nest["new_nest2"] = "new_nest";
+    std::map<msgpack::type::variant, msgpack::type::variant> nest4;
+    nest4["triple1"] = "triple";
+    nest4["triple2"] = 3;
 
-    fem_config.set_param("nested_map2", nest2);
+    std::map<msgpack::type::variant, msgpack::type::variant> nest3;
+    nest3["double1"] = "abcxyz";
+    nest3["double2"] = 9;
+    nest3["triple_nest"] = nest4;
+
+    std::map<msgpack::type::variant, msgpack::type::variant> nest2;
+    nest2["new_nest1"] = 80;
+    nest2["new_nest2"] = "new_nest";
+    nest2["double_nest"] = nest3;
+
+  
     fem_config.set_param("nested_map", nest);
+    fem_config.set_param("nested_map2", nest2);
+    std::cout << fem_config.print();
     
     try {
         int nested_int = fem_config.get_param<int>("nest1");
@@ -1015,21 +1033,112 @@ void test_femii_config(){
     if(set_result == -1){
         std::cout << "Parameter already exists." << std::endl;
     }
-
+  
     Fem2ControlMsg request;
     request.set_cmd_type(Fem2ControlMsg::CMD_CONFIGURE);
     request.set_payload<FEMII_CONFIG>(fem_config);
 
+    std::cout << "request : \n" << request;
+
     std::cout << "request payload is : " <<  request.get_payload_type() << std::endl;
 
     
-    try{
-        FEMII_CONFIG fem_config_back = request.get_payload<FEMII_CONFIG>();
-    }
-    catch(...){
-        std::cout << "heree's the problem" <<std::endl;
-    }
+    FEMII_CONFIG fem_config_back = request.get_payload<FEMII_CONFIG>();
+    assert(fem_config == fem_config_back);
+    fem_config_back.set_param("new_param", "I'm gunna break you!");
+    assert(fem_config != fem_config_back);
+
+    FEMII_CONFIG test1;
+    test1.set_param("hello", 1);
+    test1.set_param("nested_map", nest);
+
+    FEMII_CONFIG test2;
+    test2.set_param("goodbye", 1);
+    test2.set_param("nested_map", nest);
+
+    assert(test1 != test2);
+
+}
+
+void test_femii_config_encoding(){
+
+
+    printf("---------------------------\nTesting FEMII CONFIG Round Trip...\n");
+
+    //initialise a control msg with values.
+    Fem2ControlMsg request(Fem2ControlMsg::CMD_CONFIGURE, Fem2ControlMsg::ACCESS_UNSUPPORTED, Fem2ControlMsg::ACK_UNDEFINED, 0x1234, 10, 0); // default control message.
     
+    FEMII_CONFIG the_config;
+
+    the_config.set_param("param1", 1234);
+    the_config.set_param("float_param", 1.234);
+    the_config.set_param("string_param", "1234");
+    the_config.set_param("negative_param", -1234);
+
+
+    std::multimap<msgpack::type::variant, msgpack::type::variant> nest;
+    nest.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("nest1", 1));
+    nest.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("nest2", "nest"));
+    //nest["nest1"] = 1;
+    //nest["nest2"] = "nest";
+
+    std::multimap<msgpack::type::variant, msgpack::type::variant> nest4;
+    nest4.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("triple1", "triple"));
+    nest4.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("triple2", 3));
+    //nest4["triple1"] = "triple";
+    //nest4["triple2"] = 3;
+
+    std::multimap<msgpack::type::variant, msgpack::type::variant> nest3;
+    nest3.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("double1", "abcxyz"));
+    nest3.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("double2", 9));
+    nest3.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("triple_nest", nest4));
+
+    //nest3["double1"] = "abcxyz";
+    //nest3["double2"] = 9;
+    //nest3["triple_nest"] = nest4;
+
+    std::multimap<msgpack::type::variant, msgpack::type::variant> nest2;
+    nest2.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("new_nest1", 80));
+    nest2.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("new_nest2", "new_nest"));
+    nest2.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("double_nest", nest3));
+    //nest2["new_nest1"] = 
+    //nest2["new_nest2"] = "new_nest";
+    //nest2["double_nest"] = nest3;
+
+  
+    the_config.set_param("nested_map", nest);
+    the_config.set_param("nested_map2", nest2);
+
+    request.set_payload<FEMII_CONFIG>(the_config);
+
+    printf("FEMII CONFIG Request: \n");
+    std::cout << request;
+    std::cout << "payload request is : " << request.get_payload_type() << std::endl;
+
+    //  encode the fem2controlmsg as a string (byte string) and send
+    std::string encoded_request;
+    encoder.encode(request, encoded_request);
+    send(encoded_request);
+
+    //receive reply from server via zmq and decode into Fem2ControlMsg
+    std::string encoded_reply = receive();
+    Fem2ControlMsg reply;
+    encoder.decode(encoded_reply, reply);
+
+    std::cout << "payload reply is : " << reply.get_payload_type() << std::endl;
+
+    FEMII_CONFIG the_config_back = reply.get_payload<FEMII_CONFIG>();
+    
+    printf("FEMII CONFIG Reply: \n");
+    std::cout << reply;
+
+    //assert encoded/decoded round trip msgs and payloads are the same thing
+    assert(request == reply);
+    assert(the_config == the_config_back);
+    // double check the vector size + data length fields are the same
+    //assert(the_gpio_back.the_data.size() == request.get_data_length());
+    std::cout << "FEMII CONFIG MATCH" << std::endl;
+
 }
 
 
@@ -1045,14 +1154,16 @@ int main(){
         this_data.push_back(i);
     }
 
-    //test_empty_payload();
-    //test_wrong_payload();
-    //test_femii_config();
-   // test_init_config();
+    test_empty_payload();
+    test_wrong_payload();
+    test_femii_config();
+    test_femii_config_encoding();
+    test_init_config();
     
-
+    
     test_gpio_encoding(this_data);
     test_i2c_encoding(this_data);
+    
     test_xadc_encoding(this_data);
     test_rawreg_encoding(this_data);
     test_qdr_encoding(this_data);
@@ -1065,7 +1176,7 @@ int main(){
     test_xadc_read();
     test_qspi_read();
     test_i2c_read();
-
+    
     
     /*
     while(true){
