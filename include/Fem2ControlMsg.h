@@ -76,18 +76,18 @@ namespace Femii{
         uint8_t byte;
     };
 
-    //
-    //   Struct to hold two bytes in order MSB - > LSB
-    //
+    /*
+    *  Struct to hold two bytes in order MSB - > LSB
+    */
     struct word_bytes{
         
         uint8_t byte_lsb;
         uint8_t byte_msb;
     };
 
-    //
-    //  Struct to hold four bytes in order MSB - > LSB
-    //
+    /*
+    *  Struct to hold four bytes in order MSB - > LSB
+    */
     struct long_bytes{
         
         uint8_t byte_lsb;
@@ -96,10 +96,13 @@ namespace Femii{
         uint8_t byte_msb;
     };
 
-    //
-    //   Converts two bytes into a word (uint16_t)
-    //   Byte params are in order MSB - > LSB
-    //
+
+    /*
+    *   Converts two bytes into a word (uint16_t),  (r)MSB -> LSB(l)
+    *   @Param MSB : Most significant byte.
+    *   @Param LSB : Least significant byte.
+    *   Returns a word.
+    */
     inline uint16_t from_bytes_to_word(uint8_t MSB, uint8_t LSB){
         
         uint16_t result = 0x0000;
@@ -109,10 +112,15 @@ namespace Femii{
         return result;
     };
 
-    //
-    //   Converts four bytes into a long (uint32_t)
-    //   Byte params are in order MSB - > LSB
-    //
+
+    /*
+    *   Converts four bytes into a long (uint32_t),  (r)MSB -> LSB(l)
+    *   @Param MSB : Most significant byte.
+    *   @Param byte3 : The next byte.
+    *   @Param byte2 : The next byte.
+    *   @Param LSB : Least significant byte.
+    *   Returns a long.
+    */
     inline uint32_t from_bytes_to_long(uint8_t MSB, uint8_t byte3, uint8_t byte2, uint8_t LSB){
         
         uint32_t result = 0x00000000;
@@ -120,10 +128,11 @@ namespace Femii{
         return result;
     };
 
-    //
-    //   Converts a long (uint32_t) into four bytes (uint8_t)
-    //   Returns a long_bytes struct 
-    //
+    /*
+    *   Converts a long (uint32_t) into four bytes (uint8_t)
+    *   @Param data : the long to convert to two bytes.
+    *   Returns a long_bytes struct holding the four bytes.
+    */
     inline long_bytes from_long_to_bytes(uint32_t data){
         
         printf("long data: %d", data);
@@ -135,10 +144,11 @@ namespace Femii{
         return return_;
     };
 
-    //
-    //   Converts a word (uint16_t) into two bytes (uint8_t)
-    //   Returns a word_bytes struct 
-    //
+    /*
+    *   Converts a word (uint16_t) into two bytes (uint8_t)
+    *   @Param word : the word to convert to two bytes.
+    *   Returns a word_bytes struct holding the two bytes.
+    */
     inline word_bytes from_word_to_bytes(uint16_t word){
         printf("word data: %d", word);
         word_bytes return_;
@@ -148,6 +158,11 @@ namespace Femii{
         
     };
 
+    /*
+    *   Converts a long into a single byte.
+    *   @Param data : the long to convert to a byte.
+    *   Returns a bytes struct holding the byte.
+    */
     inline bytes from_long_to_byte(uint32_t data){
         
         bytes the_byte;
@@ -156,6 +171,14 @@ namespace Femii{
         
     }
 
+    /*
+    *   Template to convert WORD/LONG data into bytes and to populate the given payload's data vector with the bytes.
+    *   @Param result : the WORD/LONG to convert into bytes.
+    *   @Param the_payload : const reference a payload object.
+    *   Throws Fem2ControlMsgException if the data width is illegal. 
+    *   Calls from_word_to_bytes() to convert a word into two bytes.
+    *   Calls from_long_to_bytes() to convert a long into four bytes.
+    */
     template <typename T> void get_bytes(unsigned long result, T &the_payload){
 
         switch(the_payload.data_width){
@@ -188,6 +211,15 @@ namespace Femii{
         }
     }
 
+    /*
+    *   Template to convert byte data stored in a given payload to words or longs depending on the payload WIDTH.
+    *   @Param the_payload : const reference a payload object.
+    *   @Param index : index to get the byte data from within the payload's data vector.
+    *   Throws Fem2ControlMsgException if the data width is illegal. 
+    *   Returns the Word or Long.
+    *   Calls from_bytes_to_word() to convert two bytes to a word.
+    *   Calls from_bytes_to_long() to convert four bytes to a long.
+    */
     template <typename T> uint32_t form_words_longs(T &the_payload, int index){
 
         uint32_t result;
@@ -242,7 +274,10 @@ class Fem2ControlMsg
 
 public: 
 
-    //  Supported command types, default = CMD_UNSUPPORTED (-1)
+    /*  
+    *   ENUM of Fem2ControlMsg supported message command types, used to identify the type of request/reply.
+    *   Default = CMD_UNSUPPORTED (-1)
+    */
     enum CommandType{
 
         CMD_UNSUPPORTED = -1,
@@ -255,7 +290,11 @@ public:
 
     };
     
-    //  Supported hardware access types, default = ACCESS_UNSUPPORTED (-1)
+   /*  
+    *   ENUM of Fem2ControlMsg supported message access types, used to identify the resource type.
+    *   Default = ACCESS_UNSUPPORTED (-1)
+    *   ACCESS_UNSUPPORTED is used during global FEM-II Configuration Messages.
+    */
     enum AccessType{
 
         ACCESS_UNSUPPORTED = -1,
@@ -270,8 +309,9 @@ public:
     };
 
     /*  
-    Supported message acknowledgement types, default = ACK_UNDEFINED (-1)
-    ACK_UNDEFINED used during initial sending of messages or unsolicited messages.
+    *   ENUM of Fem2ControlMsg supported message acknowledgement states.
+    *   Default = ACK_UNDEFINED (-1)
+    *   ACK_UNDEFINED is used during initial sending of messages or unsolicited messages.
     */
     enum AckState{
 
@@ -284,7 +324,7 @@ public:
     //  Default constructor, required for msgpack encoding/decoding
     Fem2ControlMsg();
 
-    //  Constructor with defined header fields. TODO : payload
+    //  Constructor with defined header fields
     Fem2ControlMsg(
         CommandType command_type, 
         AccessType access_type,
@@ -299,6 +339,7 @@ public:
     virtual ~Fem2ControlMsg(){};
 
     std::string string_payload;
+    msgpack::type::variant payload = VOID_PAYLOAD;
 
     //  Getter methods for the header fields.
     const CommandType get_cmd_type(void) const;
@@ -312,9 +353,6 @@ public:
     const int get_read_length(void) const;
     const int get_data_length(void) const;
     
-    //  TODO Getter methods for the payload
-
-
     //  Setter methods for the header fields.
     void set_cmd_type(CommandType cmd_type);
     void set_access_type(AccessType access_type);
@@ -322,10 +360,6 @@ public:
     void set_req_id(uint16_t req_id);
     void set_retries(int16_t retries);
     void set_timeout(int16_t timeout);
-    void set_read_length(int read_length);
-    void set_data_length(int data_length);
-
-    //  TODO Setter methods for the payload
 
     //! Internal bi-directional mapping of command type from string to enumerated CommandType
     typedef boost::bimap<std::string, CommandType> CommandTypeMap;
@@ -339,39 +373,22 @@ public:
     typedef boost::bimap<std::string, AckState> AckStateMap;
     typedef AckStateMap::value_type AckStateMapEntry;
 
-    //! Internal bi-directional mapping of Data width from string to enumerated DataWidth
-    //typedef boost::bimap<std::string, DataWidth> DataWidthMap;
-    //typedef DataWidthMap::value_type DataWidthMapEntry;
-
-    // initialise the bimaps for enums
     void init_maps();
-
-    //returns the header and payload in string format.
     std::string print();
     std::vector<msgpack::type::variant> u8_to_variant_vect(std::vector<uint8_t> const& the_vector);
 
-    /* 
-    Appends a data point (the_data) to the payload.
-    Currently throws a Fem2ControlMsg exception if the payload is undefined(not initialised)
-    And throws an excepton if the payload is not a vector and cannot be appended to
-    */ 
-    template <typename T> void append_payload(T const& the_data)
-    {
-        if(this->get_payload_type() != "undefined"){
-            if(this->payload.is_vector()){
-                this->payload.as_vector().push_back(the_data);
-            }
-            else{
-                throw Fem2ControlMsgException("Unable to append data, payload not a vector.");
-            }
-        }
-        else{
-            throw Fem2ControlMsgException("Payload has not been initialised");
-        } 
-    }
-    //template <typename T> void set_payload(T const& the_payload);
-
-   //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
+    /*
+    *   Template to set the variant payload with a I2C_RW object.
+    *   @Param the_payload : const reference a I2C_RW object.
+    *   @Param read_length : integer value for the number of B/W/L to read default to -1 for write commands.
+    *   Throws Fem2ControlMsgException if the Fem2ControlMsg instance access type does not match the I2C_RW payload type provided i.e (access = I2C, payload = QSPI)
+    *   Throws Fem2ControlMsgException if CMD_READ and no read_length was provided.
+    *   Calls init_maps() to get string representations of the access_type Enum.
+    *   Initialises the string_payload payload_print().
+    *   Initialises the read_length_ variable using set_read_length() if CMD_READ.
+    *   Initialises the data_length_ variable using set_data_length() from the payload.the_data.size()
+    *   Clears and shrinks to fit temp vectors for memory deallocation.
+    */
     template<typename E> void set_payload(I2C_RW const& the_payload, int read_length=-1){
         
         this->init_maps();
@@ -407,9 +424,7 @@ public:
             //clean up the vector.
             i2c_rw_vect.clear();
             i2c_rw_vect.shrink_to_fit();
-
             }
-
         else
         {
             if (access_type_map_.right.count(this->get_access_type()))
@@ -421,13 +436,24 @@ public:
         } 
     }
   
-
-       //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
+    /*
+    *   Template to set the variant payload with a MEM_RW (DDR, QDR, QSPI) object.
+    *   @Param the_payload : const reference a MEM_RW object.
+    *   @Param read_length : integer value for the number of B/W/L to read default to -1 for write commands.
+    *   Throws Fem2ControlMsgException if the Fem2ControlMsg instance access type does not match the MEM_RW payload type provided i.e (access = DDR, payload = QSPI)
+    *   Throws Fem2ControlMsgException if CMD_READ and no read_length was provided.
+    *   Calls init_maps() to get string representations of the access_type Enum.
+    *   Initialises the string_payload payload_print().
+    *   Initialises the read_length_ variable using set_read_length() if CMD_READ.
+    *   Initialises the data_length_ variable using set_data_length() from the payload.the_data.size()
+    *   Clears and shrinks to fit temp vectors for memory deallocation.
+    */
     template<typename E> void set_payload(MEM_RW const& the_payload, int read_length=-1){
 
         this->init_maps();
         std::string access_string;
         std::string error_msg;
+
         if (access_type_map_.right.count(this->get_access_type()))
         {
             access_string = access_type_map_.right.at(this->get_access_type());
@@ -461,12 +487,6 @@ public:
             {
                 //guard for no data
                 mem_rw_vect.insert(mem_rw_vect.end(), the_payload.the_data.begin(), the_payload.the_data.end());
-                /*
-                for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
-                {
-                    mem_rw_vect.push_back(*i);
-                }
-                */
             }
             this->payload = mem_rw_vect;
             this->set_data_length(the_payload.the_data.size());
@@ -491,8 +511,20 @@ public:
         }
     }
 
-    //Specialisation of the set_payload template for I2C_READ payloads not natively supported by msgpack
+    /*
+    *   Template to set the variant payload with a BASIC_RW (XADC, GPIO, RAWREG) object.
+    *   @Param the_payload : const reference a BASIC_RW object.
+    *   @Param read_length : integer value for the number of B/W/L to read default to -1 for write commands.
+    *   Throws Fem2ControlMsgException if the Fem2ControlMsg instance access type does not match the BASIC_RW payload type provided i.e (access = GPIO, payload = XADC)
+    *   Throws Fem2ControlMsgException if CMD_READ and no read_length was provided.
+    *   Calls init_maps() to get string representations of the access_type Enum.
+    *   Initialises the string_payload payload_print().
+    *   Initialises the read_length_ variable using set_read_length() if CMD_READ.
+    *   Initialises the data_length_ variable using set_data_length() from the payload.the_data.size()
+    *   Clears and shrinks to fit temp vectors for memory deallocation.
+    */
     template<typename E> void set_payload(Basic_RW const& the_payload, int read_length=-1){
+        
         this->init_maps();
         std::string access_string;
         std::string error_msg;
@@ -526,12 +558,6 @@ public:
             if (! the_payload.the_data.empty()) //if the data hasn't been populated we don't send the vector.
             {
                 payload_rw_vect.insert(payload_rw_vect.end(), the_payload.the_data.begin(), the_payload.the_data.end());
-                /*
-                for (auto i = the_payload.the_data.begin(); i!= the_payload.the_data.end(); i++)
-                {
-                    payload_rw_vect.push_back(*i);
-                }
-                */
             }
             this->payload = payload_rw_vect;
             this->set_data_length(the_payload.the_data.size());
@@ -607,24 +633,22 @@ public:
         }
     }
 
-    //Specialisation of the set_payload template for I2C_CONFIG payloads not natively supported by msgpack
+    /*
+    *   Template to set the variant payload with a FEMII_CONFIG object.
+    *   @Param the_payload : const reference a FEMII_CONFIG object.
+    *   Throws Fem2ControlMsgException if the Fem2ControlMsg instance is not ACCESS_UNSUPPORTED, CMD_CONFIGURE and the payload is not a femii_config object.
+    *   Throws Fem2ControlMsgException if the param block of the FEMII Config object is empty.
+    *   Calls init_maps() to get string representations of the access_type Enum.
+    *   Initialises the string_payload payload_print().
+    */
     template<typename E> void set_payload(FEMII_CONFIG const& the_payload){
 
         this->init_maps();
-        if(this->get_access_type() == ACCESS_UNSUPPORTED && the_payload.name() == "femii_config")
+        if(this->get_access_type() == ACCESS_UNSUPPORTED && this->get_cmd_type() == CMD_CONFIGURE && the_payload.name() == "femii_config") // i just changed this!
         {
-            /*
-            std::multimap<msgpack::type::variant, msgpack::type::variant> test_map;
-            try{
-                test_map.insert(the_payload.params.begin(), the_payload.params.end());                
-            }
-            catch(...){
-                std::cout << "inserting the_payload into test_map is the problem" <<std::endl;
-            }
-            */
             if(the_payload.params.size()!=0)
             {
-                this->payload = the_payload.params; //test_map;
+                this->payload = the_payload.params;
             }
             else
             {
@@ -645,32 +669,6 @@ public:
         }
     }
 
-    // Unnecesarry Method.
-    //Specialisation of the set_payload template for vector<int> not natively supported by msgpack
-    template<typename E> void set_payload(std::vector<int> const& the_payload){
-         
-       // iterate over integer vector and create a variant
-        std::vector<msgpack::type::variant> temp;
-
-        for (auto i = the_payload.begin(); i != the_payload.end(); i++ ){
-            temp.push_back(*i);
-        }   
-        this->payload = temp;
-    }
-
-    // Unnecesarry Method.
-    //Specialisation of the set_payload template for vector<u8> not natively supported by msgpack
-    template<typename E> void set_payload(std::vector<u8> const& the_payload){
-       // iterate over integer vector and create a variant
-        std::vector<msgpack::type::variant> temp;
-
-        for (auto i = the_payload.begin(); i != the_payload.end(); i++ ) {
-            uint8_t test = *i;
-            temp.push_back(test);
-        }   
-        this->payload = temp;
-    }
-
     //  Overloaded outstream operator
     friend std::ostream& operator <<(std::ostream& os, Fem2ControlMsg& control_message);
 
@@ -679,31 +677,39 @@ public:
 
     //! Overloaded inequality relational operator
     friend bool operator !=(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg);
-    
-    // the payload
-    msgpack::type::variant payload = VOID_PAYLOAD;
-
-    // Returns a string representation of the payload type.
+ 
     std::string get_payload_type();
 
-    // returns a struct corresponding to the type of msg.
+    /*
+    *   Template for getting variant payloads
+    */
     template <typename T> T get_payload();
 
-    //To be used in getting data values in vector payloads
+    /*
+    *   Template for getting payload values inside a vector payload.
+    *   @Param index : const reference to the index to get the value from.
+    *   Throws Fem2ControlMsgException if the value could not be recovered.
+    *   Returns the value at the given index.
+    */
     template <typename T> T get_payload_at(int const& index)
     {
         //should test for vector.
         try
         {
-            return get_value<T>(this->payload.as_vector()[index]);//.at(index));   // does this work
+            return get_value<T>(this->payload.as_vector()[index]);
         }
         catch(...)
         {
             throw Fem2ControlMsgException("Payload value could not be recovered");
         }
     }
-    
-    //this is for i2c_maps?
+
+    /*
+    *   Template for getting parameters inside a map payload.
+    *   @Param name : const reference to a string key.
+    *   Throws Fem2ControlMsgException if the key was not found.
+    *   Returns the value for the given key (name)
+    */
     template <typename T> T get_param_at(std::string const& name)
     {
         std::map<msgpack::type::variant, msgpack::type::variant>::iterator it; 
@@ -718,7 +724,10 @@ public:
         }
     }
 
-    //to be used in getting data values in vector payloads
+    /*
+    *   Template for getting values from variant payloads.
+    *   @Param value : variant value to be converted.
+    */
     template <typename T> T get_value(msgpack::type::variant const& value);
 
     //  Definition of the header struct for msgpack encoding 
@@ -748,8 +757,64 @@ private:
     Header header;
     static CommandTypeMap cmd_type_map_;          //!< Bi-directional command type map
     static AccessTypeMap access_type_map_;        //!< Bi-directional access type map
-    static AckStateMap ack_state_map_;            //!< Bi-directional ack state map            
+    static AckStateMap ack_state_map_;            //!< Bi-directional ack state map 
     
+    void set_read_length(int read_length);
+    void set_data_length(int data_length);   
+
+    /*
+    ------- UN-USED FUNCTIONS --------
+    
+    //Appends a data point (the_data) to the payload.
+    //Currently throws a Fem2ControlMsg exception if the payload is undefined(not initialised)
+    //And throws an excepton if the payload is not a vector and cannot be appended to
+    template <typename T> void append_payload(T const& the_data)
+    {
+        if(this->get_payload_type() != "undefined"){
+            if(this->payload.is_vector()){
+                this->payload.as_vector().push_back(the_data);
+            }
+            else{
+                throw Fem2ControlMsgException("Unable to append data, payload not a vector.");
+            }
+        }
+        else{
+            throw Fem2ControlMsgException("Payload has not been initialised");
+        } 
+    }
+
+    /-------/
+
+    //Specialisation of the set_payload template for vector<int> not natively supported by msgpack
+    template<typename E> void set_payload(std::vector<int> const& the_payload){
+         
+       // iterate over integer vector and create a variant
+        std::vector<msgpack::type::variant> temp;
+
+        for (auto i = the_payload.begin(); i != the_payload.end(); i++ ){
+            temp.push_back(*i);
+        }   
+        this->payload = temp;
+    }
+
+    /-------/
+
+    //Specialisation of the set_payload template for vector<u8> not natively supported by msgpack
+    template<typename E> void set_payload(std::vector<u8> const& the_payload){
+       // iterate over integer vector and create a variant
+        std::vector<msgpack::type::variant> temp;
+
+        for (auto i = the_payload.begin(); i != the_payload.end(); i++ ) {
+            uint8_t test = *i;
+            temp.push_back(test);
+        }   
+        this->payload = temp;
+    }
+
+    /------- END OF UN-USED FUNCTIONS --------/
+
+    */
+
 }; 
  
 

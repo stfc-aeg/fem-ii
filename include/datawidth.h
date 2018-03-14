@@ -6,7 +6,10 @@
 namespace Femii{
     typedef unsigned char u8;
 
-    //  Supported data widths, default = WIDTH_UNSUPPORTED (-1) -- moved to payload as specific to these?
+    /*  
+    *   ENUM of Femii supported DataWidths.
+    *   Default = WIDTH_UNSUPPORTED (-1)
+    */
     enum DataWidth{
 
         WIDTH_UNSUPPORTED = -1, 
@@ -20,7 +23,11 @@ namespace Femii{
     typedef DataWidthMap::value_type DataWidthMapEntry;
     static DataWidthMap data_width_map_;          //!< Bi-directional data width map
 
-    //  Initialises the data_width_map and returns a string representation of the datawidth for printing
+    /*
+    *   Initialises the bi-directional map for DataWidth Enum and converts a DataWidth into a string.
+    *   @param the_width : DataWidth to be converted into a string.
+    *   Returns the string value of the DataWidth provided.
+    */
     inline static std::string init_data_width_map(DataWidth the_width){
         if(data_width_map_.size() == 0){
             data_width_map_.insert(DataWidthMapEntry("byte", WIDTH_BYTE));

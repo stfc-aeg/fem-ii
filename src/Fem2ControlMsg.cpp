@@ -5,8 +5,13 @@ typedef unsigned char u8;
 namespace Femii
 {
 
-//  Default Fem2ControlMsg constructor initialising all fields to their default values.
-//  TODO - Payload initialisation
+/*
+*   Default Fem2ControlMsg Constructor with default values, required for MsgPack Encoding/Decoding.
+*   Initialises all header variables to their default values.
+*   Initialises the internal_timestamp_ using posix_time::local_time().
+*   Initialises the string_timestamp by calling to_string_timestamp().
+*   On Decode as<Fem2ControlMsg>(), timestamps are initialised from the encoded content.
+*/
 Fem2ControlMsg::Fem2ControlMsg() : header(){
    
     this->header.cmd_type_ = CMD_UNSUPPORTED;
@@ -15,11 +20,22 @@ Fem2ControlMsg::Fem2ControlMsg() : header(){
     this->header.req_id_ = 0x0000;
     this->header.timeout_ = -1;
     this->header.retries_ = -1;
+    this->header.internal_timestamp_= boost::posix_time::microsec_clock::local_time(); 
+    this->header.string_timestamp_ = to_string_timestamp(this->header.internal_timestamp_); 
 
 };
 
-//  Default Fem2ControlMsg constructor with defined field values.
-//  TODO - Payload initialisation
+/*
+*   Fem2ControlMsg Constructor with values.
+*   @ param command_type : Fem2ControlMsg::CommandType the command type i.e. READ/WRITE
+*   @ param access_type : Fem2ControlMsg::AccessType the access type i.e. GPIO/I2C etc.
+*   @ param ack_state : Fem2ControlMsg::AckState the ack state i.e. ACK/NACK.
+*   @ param req_id : uint16_t unique id for the Fem2ControlMsg.
+*   @ param timeout : int16_t value for message timeout in ms.
+*   @ param retries : int16_t value for messsage retries.
+*   Initialises the internal_timestamp_ using posix_time::local_time().
+*   Initialises the string_timestamp by calling to_string_timestamp().
+*/
 Fem2ControlMsg::Fem2ControlMsg(CommandType command_type, AccessType access_type, AckState ack_state, uint16_t req_id, int16_t timeout, int16_t retries) :
     header()      
 {
@@ -33,49 +49,73 @@ Fem2ControlMsg::Fem2ControlMsg(CommandType command_type, AccessType access_type,
     this->header.string_timestamp_ = to_string_timestamp(this->header.internal_timestamp_); //initialise the string timestamp using the posix timestamp for encoding purposes.
 };
 
-//  Returns the (enum) command type for the Fem2ControlMsg
+/*
+*   Gets the command type value for the Fem2ControlMsg.
+*   Returns Fem2ControlMsg::CommandType enum value, cmd_type_.
+*/
 const Fem2ControlMsg::CommandType Fem2ControlMsg::get_cmd_type(void) const
 {
     return this->header.cmd_type_;
 };
 
-//  Returns the (enum) access type for the Fem2ControlMsg
+/*
+*   Gets the access type value for the Fem2ControlMsg.
+*   Returns Fem2ControlMsg::AccessType enum value, access_type_.
+*/
 const Fem2ControlMsg::AccessType Fem2ControlMsg::get_access_type(void) const
 {
     return this->header.access_type_;
 };
 
-//  Returns the (enum) ack state for the Fem2ControlMsg
+/*
+*   Gets the ack state value for the Fem2ControlMsg.
+*   Returns Fem2ControlMsg::AckState enum value, ack_state_.
+*/
 const Fem2ControlMsg::AckState Fem2ControlMsg::get_ack_state(void) const
 {
     return this->header.ack_state_;
 };
 
-//  Returns the request id for the Fem2ControlMsg
+/*
+*   Gets the req_id value for the Fem2ControlMsg.
+*   Returns the int req_id_.
+*/
 const uint16_t Fem2ControlMsg::get_req_id(void) const
 {
     return this->header.req_id_;
 };
 
-//  Returns the number of timeouts specified for the Fem2ControlMsg
+/*
+*   Gets the timeout value for the Fem2ControlMsg.
+*   Returns the int timeout_.
+*/
 const int16_t Fem2ControlMsg::get_timeout(void) const
 {
     return this->header.timeout_;
 };
 
-//  Returns the retry count for the Fem2ControlMsg
+/*
+*   Gets the retry value for the Fem2ControlMsg.
+*   Returns the int retries_.
+*/
 const int16_t Fem2ControlMsg::get_retries(void) const
 {
     return this->header.retries_;
 };
 
-//  Returns the a iso string representation of the posix timestamp for the Fem2ControlMsg
+/*
+*   Gets the string timestamp ISO string format for the Fem2ControlMsg.
+*   Returns the string timestamp_.
+*/
 const std::string Fem2ControlMsg::get_string_timestamp(void) const
 {
     return this->header.string_timestamp_;  
 };
 
-//  Returns the posix timestamp representation of the string timestamp for the Fem2ControlMsg
+/*
+*   Gets the timestamp in boost::posix format for the Fem2ControlMsg.
+*   Returns the posix timestamp, set to not_a_date_time if timestamp could not be parsed.
+*/
 const boost::posix_time::ptime Fem2ControlMsg::get_posix_timestamp(void)const
 {
     boost::posix_time::ptime pt(boost::posix_time::not_a_date_time);
@@ -89,64 +129,107 @@ const boost::posix_time::ptime Fem2ControlMsg::get_posix_timestamp(void)const
     return pt;
 };
 
-
+/*
+*   Gets the private member variable read_length_.
+*   Returns read_length_
+*/    
 const int Fem2ControlMsg::get_read_length(void) const{
     return this->read_length_;
 };
-    
+
+/*
+*   Gets the private member variable data_length_.
+*   Returns data_length
+*/    
 const int Fem2ControlMsg::get_data_length(void) const{
     return this->data_length_;
 };
 
 /*
- TODO VALIDATION OF ALL HEADER FIELDS
+*   Sets the command type variable for the Fem2ControlMsg Header.
+*   @Param cmd_type : Fem2ControlMsg CommandType enum value.
 */
-
-//  Sets the command type for the Fem2ControlMsg
 void Fem2ControlMsg::set_cmd_type(Fem2ControlMsg::CommandType cmd_type){
     this->header.cmd_type_ = cmd_type;
 };
 
-//  Sets the access type for the Fem2ControlMsg
+/*
+*   Sets the access type variable for the Fem2ControlMsg Header.
+*   @Param access_type : Fem2ControlMsg AccessType enum value.
+*/
 void Fem2ControlMsg::set_access_type(Fem2ControlMsg::AccessType access_type){
     this->header.access_type_ = access_type;
 };
 
-//  Sets the ack state for the Fem2ControlMsg
+/*
+*   Sets the ack state variable for the Fem2ControlMsg Header.
+*   @Param ack_state : Fem2ControlMsg AckState enum value.
+*/
 void Fem2ControlMsg::set_ack_state(Fem2ControlMsg::AckState ack_state){
     this->header.ack_state_ = ack_state;
 };
 
-//  Sets the request id for the Fem2ControlMsg
+/*
+*   Sets the timeout variable for the Fem2ControlMsg Header.
+*   @Param req_id : 16 bit unsigned integer value for number of req_id for the message.
+*   Throws Fem2ControlMsgException if req_id is less than 0.
+*/
 void Fem2ControlMsg::set_req_id(uint16_t req_id){
+    if(req_id < 0){
+        throw Fem2ControlMsgException("Request ID cannot be negative");
+    }
     this->header.req_id_ = req_id;
 };
 
-//  Sets the retry count for the Fem2ControlMsg
+/*
+*   Sets the timeout variable for the Fem2ControlMsg Header.
+*   @Param retries : 16 bit signed integer value for number of retries for the message.
+*   Throws Fem2ControlMsgException if retries is less than 0.
+*/
 void Fem2ControlMsg::set_retries(int16_t retries){
+    if(retries < 0){
+        throw Fem2ControlMsgException("Retry count cannot be negative");
+    }
     this->header.retries_ = retries;
 };
 
-//  Sets the timeout field for the Fem2ControlMsg
+/*
+*   Sets the timeout variable for the Fem2ControlMsg Header.
+*   @Param read_length : integer value for the length of data to read.
+*   Throws Fem2ControlMsgException if the message is type READ and the read_length is less than 1.
+*/
 void Fem2ControlMsg::set_timeout(int16_t timeout){
     this->header.timeout_ = timeout;
 };
 
+/*
+*   Sets the private member variable read_length_.
+*   @Param read_length : integer value for the length of data to read.
+*   Throws Fem2ControlMsgException if the message is type READ and the read_length is less than 1.
+*/
 void Fem2ControlMsg::set_read_length(int read_length){
     if(this->get_cmd_type() == CMD_READ && read_length < 1){
         throw Fem2ControlMsgException("Read Length Cannot Be Less than 1 For Read Commands."); // check this is ok
     }
     this->read_length_ = read_length;
 }
+
+/*
+*   Sets the private member variable data_length_.
+*   @Param data_length : integer value for the length of data.
+*   Throws Fem2ControlMsgException if the message is type WRITE and the data_length is less than 1.
+*/
 void Fem2ControlMsg::set_data_length(int data_length){
     if(this->get_cmd_type() == CMD_WRITE && data_length < 1){
         throw Fem2ControlMsgException("Data Length Cannot Be Less than 1 For Write Commands.");//check this is right
-
     }
     this->data_length_ = data_length;
-
 }
-// initialisation of the bi-maps between enumerations and string representations
+
+/*
+*   Initialises the bidirectional maps for the AccessType, CommandType and AckState Enums.
+*   Checks that the maps have not already been initialised.
+*/
 void Fem2ControlMsg::init_maps(){
 
     if (cmd_type_map_.size() == 0){
@@ -177,7 +260,10 @@ void Fem2ControlMsg::init_maps(){
 }
 
 
-// returns the type of the payload as a string representation, if not initialised, return_type=undefined.
+/*
+*   Tests the payload type for the given Fem2ControlMsg Instance. 
+*   Returns a string representation of the payload type.
+*/
 std::string Fem2ControlMsg::get_payload_type(){
 
     std::string return_type = "undefined";
@@ -208,8 +294,13 @@ std::string Fem2ControlMsg::get_payload_type(){
     return return_type;
 
 }
-//cmd notify is just for testing.
 
+/*
+*   Template specialisation to get the variant payload as a I2C_RW payload class. 
+*   Throws Fem2ControlMsg Exception if the payload is VOID
+*   Throws Fem2ControlMsg Exception if the Fem2ControlMsg is incompatible with a I2C_RW Payload.
+*   Returns a populated I2C_RW object.
+*/
 template <> I2C_RW Fem2ControlMsg::get_payload(){
 
     if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
@@ -243,6 +334,12 @@ template <> I2C_RW Fem2ControlMsg::get_payload(){
     } // if not unspecified
 }
 
+/*
+*   Template specialisation to get the variant payload as a DDR_RW payload class. 
+*   Throws Fem2ControlMsg Exception if the payload is VOID
+*   Throws Fem2ControlMsg Exception if the Fem2ControlMsg is incompatible with a DDR_RW Payload.
+*   Returns a populated DDR_RW object.
+*/
 template <> DDR_RW Fem2ControlMsg::get_payload(){
 
     if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
@@ -261,7 +358,6 @@ template <> DDR_RW Fem2ControlMsg::get_payload(){
             offset = 4;
             if(!(this->get_data_length() == 0))
             {
-                std::cout << "Length is not 0 " << std::endl;
                 /// guard for read sends 
                 for(int i=offset; i < (this->get_data_length() + offset); i++){
                     //std::cout << "value : " << std::to_string(this->get_payload_at<int>(i)) << std::endl;
@@ -278,6 +374,12 @@ template <> DDR_RW Fem2ControlMsg::get_payload(){
     }
 }
 
+/*
+*   Template specialisation to get the variant payload as a QDR_RW payload class. 
+*   Throws Fem2ControlMsg Exception if the payload is VOID
+*   Throws Fem2ControlMsg Exception if the Fem2ControlMsg is incompatible with a QDR_RW Payload.
+*   Returns a populated QDR_RW object.
+*/
 template <> QDR_RW Fem2ControlMsg::get_payload(){
 
     if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
@@ -311,6 +413,12 @@ template <> QDR_RW Fem2ControlMsg::get_payload(){
     }
 }
 
+/*
+*   Template specialisation to get the variant payload as a QSPI_RW payload class. 
+*   Throws Fem2ControlMsg Exception if the payload is VOID
+*   Throws Fem2ControlMsg Exception if the Fem2ControlMsg is incompatible with a QSPI_RW Payload.
+*   Returns a populated QSPI_RW object.
+*/
 template <> QSPI_RW Fem2ControlMsg::get_payload(){
 
     if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
@@ -345,6 +453,12 @@ template <> QSPI_RW Fem2ControlMsg::get_payload(){
 }
 
 
+/*
+*   Template specialisation to get the variant payload as a GPIO_RW payload class. 
+*   Throws Fem2ControlMsg Exception if the payload is VOID
+*   Throws Fem2ControlMsg Exception if the Fem2ControlMsg is incompatible with a GPIO_RW Payload.
+*   Returns a populated GPIO_RW object.
+*/
 template <> GPIO_RW Fem2ControlMsg::get_payload(){
 
     if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
@@ -376,6 +490,12 @@ template <> GPIO_RW Fem2ControlMsg::get_payload(){
     }
 }
 
+/*
+*   Template specialisation to get the variant payload as a XADC_RW payload class. 
+*   Throws Fem2ControlMsg Exception if the payload is VOID
+*   Throws Fem2ControlMsg Exception if the Fem2ControlMsg is incompatible with a XADC_RW Payload.
+*   Returns a populated RAWREG_RW object.
+*/
 template <> XADC_RW Fem2ControlMsg::get_payload(){
     
     if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
@@ -407,6 +527,12 @@ template <> XADC_RW Fem2ControlMsg::get_payload(){
     }
 }
 
+/*
+*   Template specialisation to get the variant payload as a RAWREG_RW payload class. 
+*   Throws Fem2ControlMsg Exception if the payload is VOID
+*   Throws Fem2ControlMsg Exception if the Fem2ControlMsg is incompatible with a RAWREG_RW Payload.
+*   Returns a populated RAWREG_RW object.
+*/
 template <> RAWREG_RW Fem2ControlMsg::get_payload(){
     
     if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
@@ -438,6 +564,12 @@ template <> RAWREG_RW Fem2ControlMsg::get_payload(){
     }
 }
 
+/*
+*   Template specialisation to get the variant payload as a I2C_CONFIG payload class. 
+*   Throws Fem2ControlMsg Exception if the payload is VOID
+*   Throws Fem2ControlMsg Exception if the Fem2ControlMsg is incompatible with a I2C_CONFIG Payload.
+*   Returns a populated I2C_CONFIG object.
+*/
 template <> I2C_CONFIG Fem2ControlMsg::get_payload(){
     
     if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
@@ -469,6 +601,13 @@ template <> I2C_CONFIG Fem2ControlMsg::get_payload(){
     }
 }
 
+/*
+*   Template specialisation to get the variant payload as a FEMII CONFIG payload class. 
+*   Throws Fem2ControlMsg Exception if the payload is VOID
+*   Throws Fem2ControlMsg Exception if the payload is not a multimap
+*   Throws Fem2ControlMsg Exception if the Fem2ControlMsg is incompatible with a FEMII CONFIG Payload.
+*   Returns a populated FEMII CONFIG object.
+*/
 template <> FEMII_CONFIG Fem2ControlMsg::get_payload(){
     
     if(this->payload.is_string() && this->payload.as_string() == VOID_PAYLOAD){
@@ -480,40 +619,10 @@ template <> FEMII_CONFIG Fem2ControlMsg::get_payload(){
             FEMII_CONFIG femii_config;
             if(this->payload.is_multimap()){
                 std::cout << "Im a map/multimap" <<std::endl;
-                
-                    //std::map<msgpack::type::variant, msgpack::type::variant> test = this->payload.as_map();
-
-                //try{
-                    //femii_config.params = this->payload.as_map();
-                //}
-                //catch(...){
-                                        
-                    std::cout << " was a multimap" << std::endl;
-
-                    std::multimap<msgpack::type::variant, msgpack::type::variant> mmap;
-
-                    mmap = this->payload.as_multimap();
-                    femii_config.params = mmap;
-                    /*
-                    std::multimap<msgpack::type::variant, msgpack::type::variant>::iterator it;
-
-                    for(it = mmap.begin(); it != mmap.end(); ++it){
-                        if(it->second.is_map()){
-                            femii_config.params[it->first] = "Is map";
-                        }
-                        else if(it->second.is_multimap()){
-                            femii_config.params[it->first] = "Is multimap";
-                        }
-                        else{
-                            femii_config.params[it->first] = it->second;
-
-                        }
-                        
-                        //.insert(std::pair<std::string, msgpack::type::variant>(it->first, it->second));
-                    }
-                    */
-
-                //}
+                std::cout << " was a multimap" << std::endl;
+                std::multimap<msgpack::type::variant, msgpack::type::variant> mmap;
+                mmap = this->payload.as_multimap();
+                femii_config.params = mmap;
                 this->string_payload = femii_config.print();     
                 return femii_config; 
             }
@@ -528,12 +637,15 @@ template <> FEMII_CONFIG Fem2ControlMsg::get_payload(){
 }
 
 
-//  TODO Validation/ Exceptions?
+/*
+*   Prints the Fem2ControlMsg as a string for use in overloaded outstream operator.
+*   Calls init_maps() to initialise bi-directional maps to get string representations for enumerations
+*   Throws Fem2ControlMsg Exception if the payload has not been initialised i.e. string_payload has not been set.
+*   Returns a string of the Fem2ControlMsg header and payload.
+*/
 std::string Fem2ControlMsg::print(){
 
     init_maps();
-
-    //  replace this with illegals?
     std::string command_string = "undefined";
     std::string access_string = "undefined";
     std::string ack_string = "undefined";
@@ -569,17 +681,25 @@ std::string Fem2ControlMsg::print(){
     else{
         output += this->string_payload;
     }
-
     output += "\n}\n";
     return output;
 }
 
+/*
+*   Template specialisation to get unsigned 8 bit ints from variant payload.
+*   @Param value : const reference a variant value.
+*   Returns a unsigned 8 bit int.
+*/
 template <> uint8_t Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
     return static_cast<uint8_t>(value.as_uint64_t());
 }
 
-
+/*
+*   Template specialisation to get integers from variant payload.
+*   @Param value : const reference a variant value.
+*   Returns a integer.
+*/
 template <> int Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
 
@@ -599,17 +719,31 @@ template <> int Fem2ControlMsg::get_value(msgpack::type::variant const& value)
     }
 }
 
+/*
+*   Template specialisation to get strings from variant payload.
+*   @Param value : const reference a variant value.
+*   Returns a string.
+*/
 template <> std::string Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
     return value.as_string();
 }
 
+/*
+*   Template specialisation to get Femii::DatWidths from variant payload.
+*   @Param value : const reference a variant value.
+*   Returns a double.
+*/
 template <> double Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
     return value.as_double();
 }
 
-//  template specialisation for returning data values within the payload as a DataWidth ENUM.
+/*
+*   Template specialisation to get Femii::DatWidths from variant payload.
+*   @Param value : const reference a variant value.
+*   Returns a DataWidth.
+*/
 template <> DataWidth Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
     int as_number;
@@ -650,19 +784,25 @@ template <> DataWidth Fem2ControlMsg::get_value(msgpack::type::variant const& va
     return return_width; 
 }
 
-
-//figure out returning vectors?
+/*
+*   Template specialisation to get vector<chars> from variant payload.
+*   @Param value : const reference a variant value.
+*   Returns a vector of variants.
+*/
 template <> std::vector<char> Fem2ControlMsg::get_value(msgpack::type::variant const& value)
 {
     return value.as_vector_char();
 }
 
-//converts a u8 vector into a vector - variant.
+/*
+*   Converts a vector of u8 to a vector of variants.
+*   @Param the_vector : const reference a vector of u8s.
+*   Returns a vector of variants.
+*/
 std::vector<msgpack::type::variant> Fem2ControlMsg::u8_to_variant_vect(std::vector<uint8_t> const& the_vector){
 
     // iterate over integer vector and create a variant
     std::vector<msgpack::type::variant> temp;
-
     for (auto i = the_vector.begin(); i != the_vector.end(); i++ ) {
         uint8_t test = static_cast<uint8_t>(*i);
         temp.push_back(test);
@@ -670,8 +810,12 @@ std::vector<msgpack::type::variant> Fem2ControlMsg::u8_to_variant_vect(std::vect
     return temp;
 }
 
-
-//! Overloaded equality relational operator
+/*
+*   Equality operator for Fem2ControlMsg 
+*   @Param lefthand_msg : const reference to a Fem2ControlMsg for comparison
+*   @Param righthand_msg : const reference to a Fem2ControlMsg for comparison
+*   Returns true if lefthand_msg and righthand_msg are equal else returns false
+*/
 bool operator ==(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg){
 
     bool equal = true;
@@ -684,13 +828,21 @@ bool operator ==(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& right
     equal &= (lefthand_msg.get_string_timestamp() == righthand_msg.get_string_timestamp());
     equal &= (lefthand_msg.get_retries() == righthand_msg.get_retries());
     equal &= (lefthand_msg.get_timeout() == righthand_msg.get_timeout());
+    //equal &= (lefthand_msg.get_data_length() == righthand_msg.get_data_length());
+    //equal &= (lefthand_msg.get_read_length() == righthand_msg.get_read_length());
 
     //TODO - Payload equality 
     return equal;
 
 };
 
-//! Overloaded inequality relational operator
+/*
+*   In-Equality operator for Fem2ControlMsg 
+*   @Param lefthand_payload : const reference to a Fem2ControlMsg for comparison
+*   @Param righthand_payload : const reference to a Fem2ControlMsg for comparison
+*   Calls equality operator.
+*   Returns true if lefthand_msg and righthand_msg are not equal else returns false
+*/
 bool operator !=(Fem2ControlMsg const& lefthand_msg, Fem2ControlMsg const& righthand_msg){
     return !(lefthand_msg == righthand_msg);
 };

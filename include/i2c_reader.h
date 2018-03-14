@@ -13,10 +13,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-
-
-//#include "Fem2ControlMsg.h" //this should be include files and datawidth.
 #include "femii_include.h"
 #include "datawidth.h"
 #include "Fem2Exception.h"

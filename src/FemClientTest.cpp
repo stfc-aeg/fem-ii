@@ -957,11 +957,9 @@ void test_femii_config(){
 
     FEMII_CONFIG fem_config;
     fem_config.set_param("param1", 1234);
-    int error = fem_config.set_param("param1", 1234);
+
     try {
-        if (error == -1){
-            throw Fem2ControlMsgException("Parameter already exists");
-        }
+        fem_config.set_param("param1", 1234);
     }
     catch(Fem2ControlMsgException e){
         std::cout << e.what() << std::endl;
@@ -1029,11 +1027,13 @@ void test_femii_config(){
         std::cout << e.what() << std::endl;
     }
 
-    int set_result = fem_config.set_param("negative_param", "whatever");
-    if(set_result == -1){
-        std::cout << "Parameter already exists." << std::endl;
+    try{
+       fem_config.set_param("negative_param", "whatever");
     }
-  
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
     Fem2ControlMsg request;
     request.set_cmd_type(Fem2ControlMsg::CMD_CONFIGURE);
     request.set_payload<FEMII_CONFIG>(fem_config);
@@ -1075,21 +1075,22 @@ void test_femii_config_encoding(){
     the_config.set_param("string_param", "1234");
     the_config.set_param("negative_param", -1234);
 
-
     std::multimap<msgpack::type::variant, msgpack::type::variant> nest;
     nest.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("nest1", 1));
     nest.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("nest2", "nest"));
     //nest["nest1"] = 1;
     //nest["nest2"] = "nest";
 
+    int test_int = 3;
     std::multimap<msgpack::type::variant, msgpack::type::variant> nest4;
     nest4.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("triple1", "triple"));
-    nest4.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("triple2", 3));
+    nest4.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("triple2", test_int));
     //nest4["triple1"] = "triple";
     //nest4["triple2"] = 3;
 
     std::multimap<msgpack::type::variant, msgpack::type::variant> nest3;
-    nest3.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("double1", "abcxyz"));
+    std::string test_string = "abcxyz";
+    nest3.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("double1", test_string));
     nest3.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("double2", 9));
     nest3.insert(std::pair<msgpack::type::variant, msgpack::type::variant>("triple_nest", nest4));
 
@@ -1115,6 +1116,88 @@ void test_femii_config_encoding(){
     std::cout << request;
     std::cout << "payload request is : " << request.get_payload_type() << std::endl;
 
+    try{
+        std::cout << "param1 :" << the_config.get_param<int>("param1") << std::endl;
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
+    try{
+         std::cout << "nest1 :" << the_config.get_param<int>("nest1") << std::endl;
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
+    try{
+        std::cout << "new_nest1 :" << the_config.get_param<int>("new_nest1") << std::endl;
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+ 
+    try{
+         std::cout << "double1 :" << the_config.get_param<std::string>("double1") << std::endl;
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
+    try{
+        std::cout << "triple2 :" << the_config.get_param<int>("triple2") << std::endl;
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    } 
+
+    try{
+        std::string test_string = the_config.get_param<std::string>("agkskjgBAJEGB");
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
+    try{
+        the_config.set_param("param1", "whatever");
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
+    try{
+        the_config.set_param("triple1", "whatever");
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
+    try{
+        the_config.set_param("double1", "whatever");
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
+    try{
+        the_config.set_param("new_nest1", "whatever");
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
+    try{
+        the_config.set_param("TEST", "HELLO"); // this will work.
+    }
+    catch(Fem2Exception e){
+        std::cout << e.what() << std::endl;
+    }
+
+    request.set_payload<FEMII_CONFIG>(the_config);
+
+    printf("FEMII CONFIG Request AGAIN : \n");
+    std::cout << request;
+    
     //  encode the fem2controlmsg as a string (byte string) and send
     std::string encoded_request;
     encoder.encode(request, encoded_request);
@@ -1128,16 +1211,19 @@ void test_femii_config_encoding(){
     std::cout << "payload reply is : " << reply.get_payload_type() << std::endl;
 
     FEMII_CONFIG the_config_back = reply.get_payload<FEMII_CONFIG>();
-    
+    std::string test_string_back = the_config_back.get_param<std::string>("double1");
+    int test_int_back = the_config_back.get_param<int>("triple2");
+   
     printf("FEMII CONFIG Reply: \n");
     std::cout << reply;
 
     //assert encoded/decoded round trip msgs and payloads are the same thing
     assert(request == reply);
     assert(the_config == the_config_back);
-    // double check the vector size + data length fields are the same
-    //assert(the_gpio_back.the_data.size() == request.get_data_length());
+    assert(test_string == test_string_back);
+    assert(test_int == test_int_back);
     std::cout << "FEMII CONFIG MATCH" << std::endl;
+    
 
 }
 
@@ -1156,9 +1242,9 @@ int main(){
 
     test_empty_payload();
     test_wrong_payload();
-    test_femii_config();
+    //test_femii_config();
     test_femii_config_encoding();
-    test_init_config();
+    //test_init_config();
     
     
     test_gpio_encoding(this_data);

@@ -2,13 +2,23 @@
 
 using namespace Femii;
 
+/*
+*   Constructor for mem_reader.
+*   @Param base : base address for the device.
+*   @param offset : offset address for the device.
+*   @param width : the DataWidth to read/write in.
+*/
 mem_reader::mem_reader(uint32_t base, uint32_t offset, DataWidth width){
 
     this->target = base + offset;
     this->width = width;
 }
 
-
+/*
+*   Initialises the memory map using the mem_reader variables.
+*   Throws Fem2Exception if it failed to open /dev/mem
+*   Throws Fem2Exception if the mmap failed.
+*/
 void mem_reader::init_mmap(){
 
     if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1)
@@ -37,9 +47,13 @@ void mem_reader::init_mmap(){
 
 }
 
+/*
+*   Reads memory from the address (base + offset) in the DataWidth provided.
+*   Throws Fem2Exception if the datawidth is not supported.
+*   Returns the value read from the address.
+*/
 unsigned long mem_reader::read_mem(){    
 
-    // just reading!
     switch(this->width) 
     {
         case WIDTH_BYTE:
@@ -60,9 +74,13 @@ unsigned long mem_reader::read_mem(){
     return this->read_result;
 }
 
+/*
+*   Writes memory to the address (base + offset) in the DataWidth provided.
+*   Throws Fem2Exception if the datawidth is not supported.
+*   Returns the value read back from the address.
+*/
 unsigned long mem_reader::write_mem(unsigned long the_data){
-    // if arguments is greater than 3 we have a write call.
- 
+
         this->writeval = the_data;
         switch(this->width) 
         {
@@ -88,6 +106,10 @@ unsigned long mem_reader::write_mem(unsigned long the_data){
     return this->read_result;
 }
 
+/*
+*   Un maps the memory map..
+*   Throws Fem2Exception if it failed to un map.
+*/
 void mem_reader::unmap(){
 
     if(munmap((void *)this->map_base, MAP_SIZE) == -1) 

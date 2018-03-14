@@ -48,6 +48,8 @@ class I2C_RW : public PayloadRW{
         std::string print() const;
         std::string name() const;
         friend bool operator == (I2C_RW const& lefthand_payload, I2C_RW const& righthand_payload);
+        //  Overloaded outstream operator
+        friend std::ostream& operator <<(std::ostream& os, I2C_RW const& payload);
 };
 
 class MEM_RW : public PayloadRW{
@@ -61,6 +63,7 @@ class MEM_RW : public PayloadRW{
         std::string print() const;
         std::string name() const;
         friend bool operator == (MEM_RW const& lefthand_payload, MEM_RW const& righthand_payload);
+        friend std::ostream& operator <<(std::ostream& os, MEM_RW const& payload);
 };
 
 
@@ -104,6 +107,7 @@ class Basic_RW : public PayloadRW{
         std::string print() const;
         std::string name() const;
         friend bool operator == (Basic_RW const& lefthand_payload, Basic_RW const& righthand_payload);
+        friend std::ostream& operator <<(std::ostream& os, Basic_RW const& payload);
 
 };
 
@@ -158,61 +162,68 @@ class FEMII_CONFIG : public Payload{
         std::string name() const;
         std::string print() const;
         std::string print_map(std::multimap<msgpack::type::variant, msgpack::type::variant> const& map, bool recursive=false, int depth=0) const;
-        int set_param(const std::string& name, msgpack::type::variant const& value, bool recurssive=false, msgpack::type::variant const& map=-1);
-        
+        void set_param(const std::string& name, msgpack::type::variant const& value);//, bool recurssive=false, msgpack::type::variant const& map=-1);
         friend bool operator == (FEMII_CONFIG const& lefthand_payload, FEMII_CONFIG const& righthand_payload);
         friend bool operator != (FEMII_CONFIG const& lefthand_payload, FEMII_CONFIG const& righthand_payload);
+        friend std::ostream& operator <<(std::ostream& os, FEMII_CONFIG const& payload);
 
-        
-        template <typename T> T get_param(const std::string& name, bool reccursive=false, msgpack::type::variant const& map=-1){
-            
-            bool is_nested = false;
-            bool found_in_nested = false;
+        /*
+        *   Function template used to get parameters within configuration messages. 
+        *   Calls search_map, a recursive search function iterating through nested maps
+        *   Throws Fem2Exception if parameter is not found.
+        *   Returns the value for the key if was found.
+        */
+        template <typename T> T get_param(const std::string& name){//, bool reccursive=false, msgpack::type::variant const& map=-1, bool is_nested=false, bool found_in_nested=false){
 
-            //For basic first time calls, iterate over the map
-            if(!reccursive){
-                std::multimap<msgpack::type::variant, msgpack::type::variant>::iterator it;
-                for(it = this->params.begin(); it != this->params.end(); ++it){
-                    //handle all nested maps first - calling recurssive function
-                    if(it->second.is_multimap()){
-                        is_nested = true;
-                        try{
-                            // call recurssive version
-                            return get_param<T>(name, true, it->second.as_multimap());
-                        }
-                        catch(Fem2Exception e){
-                            found_in_nested = false;
-                        }
-                    }
-                }// if there was no maps or the parameter was not found in the maps just search the flat map
-                if (!is_nested || !found_in_nested){
-                    it = this->params.find(name);
-                    if (it != this->params.end()) {
-                        return get_param_value<T>(it->second);
-                    }
-                    else{
-                        std::stringstream sstream; 
-                        sstream << "Parameter " << name << " Not Found";
-                        throw Fem2Exception(sstream.str());
-                    }
-                }
+            try{
+                return search_map<T>(this->params, name);
             }
-            else{ // recurssive version, pass the nested map and either return value or throw exception if not found
-                std::multimap<msgpack::type::variant, msgpack::type::variant>::const_iterator it; 
-                it = map.as_multimap().find(name);
-
-                if (it != map.as_multimap().end()) {
-                    return get_param_value<T>(it->second);
-                }
-                else{
-                    std::stringstream sstream;
-                    sstream << "Parameter " << name << " Not Found";
-                    throw Fem2Exception(sstream.str());
-                }
+            catch(Fem2Exception e){
+                std::stringstream sstream; 
+                sstream << "Parameter " << name << " Not Found";
+                throw Fem2Exception(sstream.str());
             }
         }
         
-        template <typename T> T get_param_value(msgpack::type::variant const& value);    
+        /*
+        *   Function template used to recursivly search through nested maps for keys.
+        *   Throws Fem2Exception if parameter is not found.
+        *   Returns the value for the key if was found.
+        */
+        template <typename T> T search_map(std::multimap<msgpack::type::variant, msgpack::type::variant> const& map, std::string const& name){
+
+            bool found; 
+            std::multimap<msgpack::type::variant, msgpack::type::variant>::const_iterator it;
+            it = map.find(name);
+            if (it != map.end()){
+                found = true;
+                return get_param_value<T>(it->second);
+            }
+            else{
+                for(it = map.begin(); it != map.end(); ++it){
+                    std::string key = it->first.as_string();
+                    if(it->second.is_multimap()){
+                        try{
+                            return search_map<T>(it->second.as_multimap(), name);
+                        }
+                        catch(Fem2Exception e){
+                            continue;  
+                        }               
+                    }
+                    else{
+                        found = false;
+                    }
+                }
+                if(!found){
+                    std::stringstream sstream; 
+                    sstream << "Parameter " << name << " Not Found";
+                    throw Fem2Exception(sstream.str());
+                }  
+            }
+        } 
+        
+        template <typename T> T get_param_value(msgpack::type::variant const& value);
+        int count_name(const std::string& name, std::multimap<msgpack::type::variant, msgpack::type::variant> const& map); 
 };
 
 
@@ -240,6 +251,7 @@ class I2C_CONFIG : public Payload{
         std::string name() const;
 
         friend bool operator == (I2C_CONFIG const& lefthand_payload, I2C_CONFIG const& righthand_payload);
+        friend std::ostream& operator <<(std::ostream& os, I2C_CONFIG const& payload);
 
 };
 

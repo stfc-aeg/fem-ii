@@ -14,11 +14,9 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
-//#include "Fem2ControlMsg.h" // this should be different?
 #include "femii_include.h"
 #include "datawidth.h"
 #include "Fem2Exception.h"
-//#include "data_helpers.hpp"
 
 #define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
   __LINE__, __FILE__, errno, strerror(errno)); throw Fem2Exception("Fatal Error");} while(0)
@@ -33,7 +31,6 @@ class mem_reader{
     public:
 
         int size = getpagesize();
-        //printf("size: %d \n", size);
         int fd; //this is file to open using open(dev/mem)
         void *map_base, *virt_addr; 
         unsigned long read_result, writeval;
