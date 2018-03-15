@@ -1,15 +1,9 @@
 #ifndef PAYLOADCLASSES_H_
 #define PAYLOADCLASSES_H_
 
-
-//#include <stdint.h>
-//#include <vector>
 #include "femii_include.h"
 #include "datawidth.h"
 #include "Fem2Exception.h"
-//#include "Fem2ControlMsg.h"
-//#include <boost/optional.hpp>
-
 
 namespace Femii{
 
@@ -48,6 +42,7 @@ class I2C_RW : public PayloadRW{
         std::string print() const;
         std::string name() const;
         friend bool operator == (I2C_RW const& lefthand_payload, I2C_RW const& righthand_payload);
+        friend bool operator != (I2C_RW const& lefthand_payload, I2C_RW const& righthand_payload);
         //  Overloaded outstream operator
         friend std::ostream& operator <<(std::ostream& os, I2C_RW const& payload);
 };
@@ -63,6 +58,7 @@ class MEM_RW : public PayloadRW{
         std::string print() const;
         std::string name() const;
         friend bool operator == (MEM_RW const& lefthand_payload, MEM_RW const& righthand_payload);
+        friend bool operator != (MEM_RW const& lefthand_payload, MEM_RW const& righthand_payload);
         friend std::ostream& operator <<(std::ostream& os, MEM_RW const& payload);
 };
 
@@ -107,6 +103,7 @@ class Basic_RW : public PayloadRW{
         std::string print() const;
         std::string name() const;
         friend bool operator == (Basic_RW const& lefthand_payload, Basic_RW const& righthand_payload);
+        friend bool operator != (Basic_RW const& lefthand_payload, Basic_RW const& righthand_payload);
         friend std::ostream& operator <<(std::ostream& os, Basic_RW const& payload);
 
 };
@@ -173,7 +170,7 @@ class FEMII_CONFIG : public Payload{
         *   Throws Fem2Exception if parameter is not found.
         *   Returns the value for the key if was found.
         */
-        template <typename T> T get_param(const std::string& name){//, bool reccursive=false, msgpack::type::variant const& map=-1, bool is_nested=false, bool found_in_nested=false){
+        template <typename T> T get_param(const std::string& name){
 
             try{
                 return search_map<T>(this->params, name);

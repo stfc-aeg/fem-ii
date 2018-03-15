@@ -49,6 +49,10 @@ bool operator == (I2C_RW const& lefthand_payload, I2C_RW const& righthand_payloa
     return equal;
 };
 
+bool operator != (I2C_RW const& lefthand_payload, I2C_RW const& righthand_payload){
+    return !(lefthand_payload == righthand_payload);
+};
+
 std::ostream& operator <<(std::ostream& os, I2C_RW const& payload){
 
     os << payload.print();
@@ -99,6 +103,10 @@ bool operator == (MEM_RW const& lefthand_payload, MEM_RW const& righthand_payloa
     equal &= (lefthand_payload.the_data == righthand_payload.the_data);
     //the_data equality.
     return equal;            
+};
+
+bool operator != (MEM_RW const& lefthand_payload, MEM_RW const& righthand_payload){
+    return !(lefthand_payload == righthand_payload);
 };
 
 std::ostream& operator <<(std::ostream& os, MEM_RW const& payload){
@@ -171,6 +179,10 @@ bool operator == (Basic_RW const& lefthand_payload, Basic_RW const& righthand_pa
     equal &= (lefthand_payload.the_data == righthand_payload.the_data);
     //the_data equality.
     return equal;
+};
+
+bool operator != (Basic_RW const& lefthand_payload, Basic_RW const& righthand_payload){
+   return !(lefthand_payload == righthand_payload);
 };
 
 std::ostream& operator <<(std::ostream& os, Basic_RW const& payload){
@@ -472,6 +484,10 @@ bool operator == (I2C_CONFIG const& lefthand_payload, I2C_CONFIG const& righthan
     // TODO optional param equality
 
     return equal;
+};
+
+bool operator != (I2C_CONFIG const& lefthand_payload, I2C_CONFIG const& righthand_payload){
+   return !(lefthand_payload == righthand_payload);
 };
 
 
